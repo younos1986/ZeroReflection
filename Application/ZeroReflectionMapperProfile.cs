@@ -8,6 +8,7 @@ public class ZeroReflectionMapperProfile : MapperProfile
 {
     public override void Configure(MapperConfiguration config)
     {
+        config.ThrowIfPropertyMissing = false;
         config.EnableProjectionFunctions = false;
         config.UseSwitchDispatcher = true;
         

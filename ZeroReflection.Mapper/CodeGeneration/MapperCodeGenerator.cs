@@ -359,6 +359,13 @@ namespace ZeroReflection.Mapper.CodeGeneration
             sb.AppendLine("        {");
             sb.AppendLine("            if (source == null) return null;");
             sb.AppendLine();
+            
+            // Add validation for missing property mappings if enabled
+            if (mapping.ThrowIfPropertyMissing)
+            {
+                GeneratePropertyMappingValidation(sb, mapping);
+            }
+            
             if (mapping.HasCustomMapping && !string.IsNullOrEmpty(mapping.CustomMappingMethod))
             {
                 sb.AppendLine("            // Using user-defined custom mapping method");
@@ -590,6 +597,21 @@ namespace ZeroReflection.Mapper.CodeGeneration
             {
                 // Generic collection, default to ListProjectionCompiled
                 return $"{mapClass}.ListProjectionCompiled(source.{prop.SourcePropertyName})";
+            }
+        }
+
+        private void GeneratePropertyMappingValidation(StringBuilder sb, MappingInfo mapping)
+        {
+            var unmappableProperties = mapping.Properties.Where(p => !p.IsMappable && !p.IsCustomMapped).ToList();
+            
+            if (unmappableProperties.Any())
+            {
+                sb.AppendLine("            // Validate property mappings");
+                foreach (var prop in unmappableProperties)
+                {
+                    sb.AppendLine($"            throw new System.InvalidOperationException(\"Property mapping missing for '{mapping.Destination}.{prop.Name}': {prop.UnmappableReason}. Fix the model or add explicit mapping configuration.\");");
+                }
+                sb.AppendLine();
             }
         }
 

@@ -30,6 +30,9 @@ namespace ZeroReflection.Mapper.CodeGeneration.Models
         // Switch dispatcher support
         public bool UseSwitchDispatcher { get; set; }
         
+        // Throw if property mapping missing support
+        public bool ThrowIfPropertyMissing { get; set; }
+        
         // Pass Analyzers Log to generated code to debug 
         public string LoggedString { get; set; }
     }

@@ -207,7 +207,8 @@ namespace ZeroReflection.Mapper
             }
         }
 
-        public bool EnableProjectionFunctions { get; set; }
+        public bool EnableProjectionFunctions { get; set; } = false;
         public bool UseSwitchDispatcher { get; set; } = true;
+        public bool ThrowIfPropertyMissing { get; set; } = false;
     }
 }

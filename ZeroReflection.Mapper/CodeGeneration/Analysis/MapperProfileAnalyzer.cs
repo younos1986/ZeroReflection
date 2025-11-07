@@ -71,6 +71,10 @@ namespace ZeroReflection.Mapper.CodeGeneration.Analysis
                                     {
                                         _configuration.UseSwitchDispatcher = boolValue;
                                     }
+                                    else if (propertyName == "ThrowIfPropertyMissing")
+                                    {
+                                        _configuration.ThrowIfPropertyMissing = boolValue;
+                                    }
                                 }
                             }
                         }
@@ -113,6 +117,10 @@ namespace ZeroReflection.Mapper.CodeGeneration.Analysis
             // Set UseSwitchDispatcher per mapping according to config
             bool globalUseSwitchDispatcher = _configuration.UseSwitchDispatcher;
             mappings.ForEach(q => q.UseSwitchDispatcher = globalUseSwitchDispatcher);
+            
+            // Set ThrowIfPropertyMissing per mapping according to config
+            bool globalThrowIfPropertyMissing = _configuration.ThrowIfPropertyMissing;
+            mappings.ForEach(q => q.ThrowIfPropertyMissing = globalThrowIfPropertyMissing);
             
             return mappings;
         }

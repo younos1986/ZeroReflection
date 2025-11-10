@@ -587,16 +587,18 @@ namespace ZeroReflection.Mapper.CodeGeneration
             var mapClass = $"Map{sourceElementType}To{destElementType}";
             if (prop.Type.Contains("List<"))
             {
-                return $"{mapClass}.ListProjectionCompiled(source.{prop.SourcePropertyName})";
+                // Use direct list-to-list mapping method
+                return $"{mapClass}.MapListTo{destElementType}(source.{prop.SourcePropertyName})";
             }
             else if (prop.Type.Contains("[]"))
             {
-                return $"{mapClass}.ArrayProjectionCompiled(source.{prop.SourcePropertyName})";
+                // Use direct array-to-array mapping method
+                return $"{mapClass}.MapArrayTo{destElementType}(source.{prop.SourcePropertyName})";
             }
             else
             {
-                // Generic collection, default to ListProjectionCompiled
-                return $"{mapClass}.ListProjectionCompiled(source.{prop.SourcePropertyName})";
+                // Generic collection: return a List<TDest> which is assignable to common collection interfaces
+                return $"{mapClass}.MapListTo{destElementType}(source.{prop.SourcePropertyName})";
             }
         }
 

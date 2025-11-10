@@ -606,10 +606,10 @@ namespace ZeroReflection.Mapper.CodeGeneration
             
             if (unmappableProperties.Any())
             {
-                sb.AppendLine("            // Validate property mappings");
+                sb.AppendLine("            // Build-time errors for unmapped properties (ThrowIfPropertyMissing=true)");
                 foreach (var prop in unmappableProperties)
                 {
-                    sb.AppendLine($"            throw new System.InvalidOperationException(\"Property mapping missing for '{mapping.Destination}.{prop.Name}': {prop.UnmappableReason}. Fix the model or add explicit mapping configuration.\");");
+                    sb.AppendLine($"#error ZeroReflection.Mapper: Property mapping missing for '{mapping.Source}->{mapping.Destination}.{prop.Name}': {prop.UnmappableReason}. Fix the model or add configuration (Ignore/ForMember/WithCustomMapping).");
                 }
                 sb.AppendLine();
             }

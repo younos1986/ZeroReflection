@@ -4,11 +4,11 @@ namespace Application.Models.Entities;
 
 public partial class PersonEntity
 {
-    public string Email { get; set; }
+    public string Email { get; set; } = string.Empty;
     public int Age { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     
-    public CertificateEntity Certificate { get; set; }
+    public CertificateEntity Certificate { get; set; } = new();
     
     public List<AddressEntity> Addresses { get; set; } = new();
         
@@ -28,8 +28,8 @@ public partial class PersonEntity
 
 public class CertificateEntity
 {
-    public string CertificateId { get; set; }
-    public string CertificateName { get; set; }
+    public string CertificateId { get; set; } = string.Empty;
+    public string CertificateName { get; set; } = string.Empty;
     public DateTime ExpiryDate { get; set; }
     
     public static implicit operator CertificateModel(CertificateEntity model)
@@ -45,9 +45,9 @@ public class CertificateEntity
 
 public class AddressEntity
 {
-    public string Street { get; set; }
-    public string City { get; set; }
-    public string ZipCode { get; set; }
+    public string Street { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string ZipCode { get; set; } = string.Empty;
     
     public static implicit operator AddressModel(AddressEntity model)
     {

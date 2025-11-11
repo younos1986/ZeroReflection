@@ -28,7 +28,7 @@ public class ZeroReflectionMapperProfile : MapperProfile
         config.CreateMap<ProductEntity, ProductModel>();
 
         config.CreateMap<BalanceEntity, BalanceModel>()
-            .WithCustomMapping(StaticMappers.MapBalanceModelToBalanceEntity);
+            .WithCustomMapping(StaticMappers.MapBalanceEntityToBalanceModel);
 
         // don't forget reverse mapping for WithCustomMapping
         config.CreateMap<BalanceModel, BalanceEntity>();
@@ -37,7 +37,7 @@ public class ZeroReflectionMapperProfile : MapperProfile
 
 public class StaticMappers
 {
-    public static BalanceModel MapBalanceModelToBalanceEntity(BalanceEntity model)
+    public static BalanceModel MapBalanceEntityToBalanceModel(BalanceEntity model)
     {
         return new BalanceModel
         {

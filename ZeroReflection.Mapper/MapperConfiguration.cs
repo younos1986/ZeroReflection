@@ -25,7 +25,8 @@ namespace ZeroReflection.Mapper
 
         public void AddCustomMapping<TSource, TDestination>(Expression<Func<TSource, TDestination>> customMapperExpr)
         {
-            _customMappings[(typeof(TSource), typeof(TDestination))] = customMapperExpr.Compile();
+            // AOT-safe: Expression.Compile is not supported under NativeAOT. Use delegate overload instead.
+            throw new NotSupportedException("Expression-based custom mappings are not supported in AOT. Use the Func<TSource,TDestination> overload.");
         }
 
         public void AddCustomMapping<TSource, TDestination>(Func<TSource, TDestination> customMapper)
@@ -166,9 +167,8 @@ namespace ZeroReflection.Mapper
             /// <returns>The current builder instance.</returns>
             public MappingBuilder<TSource, TDestination> WithCustomMapping(Expression<Func<TSource, TDestination>> customMapperExpr)
             {
-                _config.AddCustomMapping(customMapperExpr);
-                _hasCustomMappingOrMemberConfig = true;
-                return this;
+                // AOT-safe: Expression.Compile is not supported under NativeAOT. Use delegate overload instead.
+                throw new NotSupportedException("Expression-based custom mappings are not supported in AOT. Use the Func<TSource,TDestination> overload.");
             }
 
             /// <summary>

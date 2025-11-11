@@ -104,16 +104,16 @@ public class MapperOneObjectTests
     }
     
     [Fact]
-    public void Should_Map_Array_To_List()
+    public void Should_Map_List_To_List()
     {
-        var testModelArray = new TestModel[]
+        var testModels = new List<TestModel>
         {
             new() { Name = "Model 1", Age = 20 },
             new() { Name = "Model 2", Age = 30 }
-        }.ToList();
+        };
         
         // Act
-        var testEntityList = _mapper.Map<List<TestEntity>>(testModelArray);
+        var testEntityList = _mapper.Map<List<TestEntity>>(testModels);
         
         // Assert
         Assert.NotNull(testEntityList);

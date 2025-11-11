@@ -20,11 +20,7 @@ public class Mapper(IGeneratedMappingDispatcher dispatcher) : IMapper
     {
         if (source is null)
             return default!;
-
-        var sourceType = source.GetType();
-        var destType = typeof(TDestination);
-
-        return MapCollection<object, TDestination>(source, sourceType, destType);
+        return (TDestination)MapInternal(source, source.GetType(), typeof(TDestination));
     }
 
 
@@ -41,38 +37,29 @@ public class Mapper(IGeneratedMappingDispatcher dispatcher) : IMapper
     {
         if (source is null)
             return default!;
-
-        var sourceType = typeof(TSource);
-        var destType = typeof(TDestination);
-
-        return MapCollection<TSource, TDestination>(source, sourceType, destType);
+        return (TDestination)MapInternal(source!, typeof(TSource), typeof(TDestination));
     }
 
-    /// <summary>
-    /// Internal helper for mapping collections (arrays or lists) from source to destination type.
-    /// Throws an exception if mapping is not possible.
-    /// </summary>
-    /// <typeparam name="TSource">The source type.</typeparam>
-    /// <typeparam name="TDestination">The destination type.</typeparam>
-    /// <param name="source">The source object to map.</param>
-    /// <param name="sourceType">The type of the source object.</param>
-    /// <param name="destType">The type of the destination object.</param>
-    /// <returns>The mapped object of type <typeparamref name="TDestination"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private TDestination MapCollection<TSource, TDestination>(TSource source, Type sourceType, Type destType)
+    private object MapInternal(object source, Type sourceType, Type destType)
     {
         if (sourceType.IsArray)
         {
-            if (dispatcher.TryMapArray(source!, sourceType, destType, out var arrResult))
-                return (TDestination)arrResult;
+            if (dispatcher.TryMapArray(source, sourceType, destType, out var arrResult))
+                return arrResult;
         }
         else if (typeof(IList).IsAssignableFrom(sourceType))
         {
-            if (dispatcher.TryMapList(source!, sourceType, destType, out var listResult))
-                return (TDestination)listResult;
+            if (dispatcher.TryMapList(source, sourceType, destType, out var listResult))
+                return listResult;
+        }
+        else
+        {
+            if (dispatcher.TryMapSingleObject(source, sourceType, destType, out var singleResult))
+                return singleResult;
         }
 
-        throw new Exception($"Cannot map from {sourceType.Name} to {destType.Name}.");
+        throw new InvalidOperationException($"Cannot map from {sourceType.FullName} to {destType.FullName}.");
     }
 
     /// <summary>
@@ -88,10 +75,8 @@ public class Mapper(IGeneratedMappingDispatcher dispatcher) : IMapper
     {
         if (source is null)
             return default!;
-
         if (dispatcher.TryMapSingleObject(source!, typeof(TSource), typeof(TDestination), out var result))
             return (TDestination)result;
-
-        throw new Exception($"Cannot map single object from {typeof(TSource).Name} to {typeof(TDestination).Name}.");
+        throw new InvalidOperationException($"Cannot map single object from {typeof(TSource).FullName} to {typeof(TDestination).FullName}.");
     }
 }

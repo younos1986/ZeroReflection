@@ -34,9 +34,10 @@ namespace ZeroReflection.Mapper.CodeGeneration
             if (source == null) return null;
             int len = source.Length;
             var resultList = new List<TDest>(len);
-            var span = source.AsSpan();
             for (int i = 0; i < len; i++)
-                resultList.Add(map(span[i]));
+            {
+                resultList.Add(map(source[i]));
+            }
             return resultList;
         }
 
@@ -46,10 +47,10 @@ namespace ZeroReflection.Mapper.CodeGeneration
             if (source == null) return null;
             int len = source.Length;
             var result = new TDest[len];
-            var sourceSpan = source.AsSpan();
-            var destSpan = result.AsSpan();
             for (int i = 0; i < len; i++)
-                destSpan[i] = map(sourceSpan[i]);
+            {
+                result[i] = map(source[i]);
+            }
             return result;
         }
     }

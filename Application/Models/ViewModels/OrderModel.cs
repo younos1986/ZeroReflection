@@ -11,7 +11,7 @@ public class OrderModel
     public List<string> ProductNames { get; set; } = new List<string>();
     public string ShippingAddress { get; set; } = string.Empty;
     public string BillingAddress { get; set; } = string.Empty;
-    public List<OrderItemModel> OrderItems { get; set; }
+    public List<OrderItemModel> OrderItems { get; set; } = new();
     
     public string? OrderStatus { get; set; } = "Pending"; // Default status
     public DateTime? ShippedDate { get; set; } = null; // Nullable

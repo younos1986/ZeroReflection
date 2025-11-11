@@ -28,7 +28,8 @@ namespace ZeroReflection.Mapper.CodeGeneration
                 spc.AddSource($"Map{source}To{destination}.g.cs", Microsoft.CodeAnalysis.Text.SourceText.From(handlerSource, System.Text.Encoding.UTF8));
             }
 
-            // Dispatcher
+            // Dispatcher - decide using configuration flag; fall back to simple chain if mixed
+            bool useSwitch = mappings.Any() && mappings.First().UseSwitchDispatcher;
             spc.AddSource("GeneratedMappingDispatcher.g.cs", Microsoft.CodeAnalysis.Text.SourceText.From(DispatcherEmitter.Build(mappings), System.Text.Encoding.UTF8));
         }
     }

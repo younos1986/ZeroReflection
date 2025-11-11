@@ -4,23 +4,23 @@ namespace Application.Models.ViewModels;
 
 public class PersonModel
 {
-    public string Email { get; set; }
+    public string Email { get; set; } = string.Empty;
     public int Age { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     
-    public CertificateModel Certificate { get; set; }
+    public CertificateModel Certificate { get; set; } = new();
     
     public List<AddressModel> Addresses { get; set; } = new();
     
-    public static implicit operator PersonEntity(PersonModel person)
+    public static implicit operator Application.Models.Entities.PersonEntity(PersonModel person)
     {
-        return new PersonEntity
+        return new Application.Models.Entities.PersonEntity
         {
             Email = person.Email,
             Age = person.Age,
             Name = person.Name,
             Certificate = person.Certificate,
-            Addresses = person.Addresses.Select(a=> (AddressEntity) a).ToList()
+            Addresses = person.Addresses.Select(a=> (Application.Models.Entities.AddressEntity) a).ToList()
             
         };
     }
@@ -28,13 +28,13 @@ public class PersonModel
 
 public class CertificateModel
 {
-    public string CertificateId { get; set; }
-    public string CertificateName { get; set; }
+    public string CertificateId { get; set; } = string.Empty;
+    public string CertificateName { get; set; } = string.Empty;
     public DateTime ExpiryDate { get; set; }
     
-    public static implicit operator CertificateEntity(CertificateModel model)
+    public static implicit operator Application.Models.Entities.CertificateEntity(CertificateModel model)
     {
-        return new CertificateEntity
+        return new Application.Models.Entities.CertificateEntity
         {
             CertificateId = model.CertificateId,
             CertificateName = model.CertificateName,
@@ -45,13 +45,13 @@ public class CertificateModel
 
 public class AddressModel
 {
-    public string Street { get; set; }
-    public string City { get; set; }
-    public string ZipCode { get; set; }
+    public string Street { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string ZipCode { get; set; } = string.Empty;
     
-    public static implicit operator AddressEntity(AddressModel model)
+    public static implicit operator Application.Models.Entities.AddressEntity(AddressModel model)
     {
-        return new AddressEntity
+        return new Application.Models.Entities.AddressEntity
         {
             Street = model.Street,
             City = model.City,

@@ -65,7 +65,8 @@ namespace ZeroReflection.Mapper.CodeGeneration.Analysis
                                     var boolValue = literal.Kind() == SyntaxKind.TrueLiteralExpression;
                                     if (propertyName == "EnableProjectionFunctions")
                                     {
-                                        _configuration.EnableProjectionFunctions = boolValue;
+                                        // Force-disable projections for AOT safety
+                                        _configuration.EnableProjectionFunctions = false;
                                     }
                                     else if (propertyName == "UseSwitchDispatcher")
                                     {
@@ -88,30 +89,10 @@ namespace ZeroReflection.Mapper.CodeGeneration.Analysis
             ProcessReverseMappingsForCompilation(compilation, mappings, mappingSet, reverseSet);
             ProcessPendingNestedMappings(mappings, mappingSet);
 
-            // Set EnableProjectionFunctions per mapping according to config and collection property presence
-            // If globalEnable is true, set true for all mappings.
-            // If globalEnable is false, set true only for mappings's properties that are CollectionDeep property.
-            bool globalEnable = _configuration.EnableProjectionFunctions;
-            if (globalEnable)
+            // AOT-safe: Do not enable any projection functions regardless of config
+            foreach (var mapping in mappings)
             {
-                mappings.ForEach(q => q.EnableProjectionFunctions = true);
-            }
-            else
-            {
-                // Collect all collection element types from all mappings
-                var collectionElementTypes = mappings
-                    .SelectMany(m => m.Properties)
-                    .Where(p => p.MappingType == MappingType.CollectionDeep && !string.IsNullOrEmpty(p.CollectionElementType))
-                    .Select(p => p.CollectionElementType)
-                    .Distinct()
-                    .ToList();
-
-                foreach (var mapping in mappings)
-                {
-                    // mapping.LoggedString = string.Join("#", collectionElementTypes);
-                    mapping.EnableProjectionFunctions =
-                        collectionElementTypes.Any(q=>q.Contains(mapping.Source));
-                }
+                mapping.EnableProjectionFunctions = false;
             }
             
             // Set UseSwitchDispatcher per mapping according to config

@@ -52,15 +52,34 @@ public class IgnoreMapAttributeTests
     }
 
     [Fact]
+    public void Should_Ignore_Properties_With_IgnoreMapAttribute_On_Reverse_Mapping()
+    {
+        // Arrange
+        var destination = new DestinationModelWithIgnore
+        {
+            Name = "Jane Smith",
+            Age = 22,
+            IgnoredProperty = "Changed Value",
+            MappedProperty = "Reverse Mapped"
+        };
+
+        // Act
+        var source = _mapper.MapSingleObject<DestinationModelWithIgnore, SourceModelWithIgnore>(destination);
+
+        // Assert
+        Assert.NotNull(source);
+        Assert.Equal(destination.Name, source.Name);
+        Assert.Equal(destination.Age, source.Age);
+        Assert.Equal(destination.MappedProperty, source.MappedProperty);
+        // Source's ignored property should remain its default value
+        Assert.Equal("Should be ignored", source.IgnoredProperty);
+        Assert.NotEqual(destination.IgnoredProperty, source.IgnoredProperty);
+    }
+
+    [Fact]
     public void Should_Not_Generate_Mapping_For_Ignored_Properties()
     {
-        // This test verifies that properties with [IgnoreMap] are not included
-        // in the generated mapping code at all. If the source generator is working
-        // correctly, the generated mapping method should not contain any reference
-        // to IgnoredSourceProperty or IgnoredDestinationProperty.
-        
-        // The test above already validates the runtime behavior,
-        // but this documents the expected code generation behavior.
+        // Documentation test
         Assert.True(true, "IgnoreMap properties should not appear in generated mapping code");
     }
 }

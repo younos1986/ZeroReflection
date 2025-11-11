@@ -6,6 +6,8 @@ ZeroReflection.Mapper is a .NET source generator for object mapping. It enables 
 - Attribute-based mapping configuration
 - Custom mapping profiles
 - Ignore properties with attributes
+- Optional LINQ projection expressions (compile-time generated)
+- Fast dispatcher for arrays/lists/single objects (if/else or switch jump-table)
 - Source generator for high performance
 
 ## Getting Started
@@ -25,6 +27,10 @@ A Mapper Profile in ZeroReflection.Mapper allows you to configure how objects ar
 2. Override the `Configure` method and use the provided `MapperConfiguration` to set up your mappings.
 
 > **Note:** If you are not interested in projections, use `config.EnableProjectionFunctions = false;` in your profile configuration. This will prevent the generator from emitting LINQ projection expressions and compiled delegates.
+> Notes
+> - If you are not interested in projections, use `config.EnableProjectionFunctions = false;`. When `false`, projection members may still be selectively generated for collection element types used by other mappings.
+> - `config.UseSwitchDispatcher` controls whether the dispatcher uses a switch-based jump table or chained type checks.
+> - `config.ThrowIfPropertyMissing` injects build-time `#error` for unmapped destination properties.
 
 ### Example
 ```csharp
@@ -35,9 +41,14 @@ public class ZeroReflectionMapperProfile : MapperProfile
     public override void Configure(MapperConfiguration config)
     {
         // Enable projection functions (for LINQ and compiled delegates)
+        // Projection functions (Projection, ListProjection, ArrayProjection + compiled delegates)
         config.EnableProjectionFunctions = true;
         // If you do NOT want projections, set to false:
         // config.EnableProjectionFunctions = false;
+        // Dispatcher strategy
+        config.UseSwitchDispatcher = true;
+        // Build will fail if a destination property cannot be mapped (unless ignored or custom mapped)
+        config.ThrowIfPropertyMissing = false;
 
         // Simple mapping with reverse
         config.CreateMap<PersonModel, PersonEntity>().Reverse();
@@ -48,6 +59,7 @@ public class ZeroReflectionMapperProfile : MapperProfile
             .Ignore(dest => dest.Manufacturer);
 
         // Reverse mapping for customized ones
+        // Reverse mapping for customized ones must be defined explicitly
         config.CreateMap<ProductEntity, ProductModel>();
 
         // Custom mapping function
@@ -81,11 +93,17 @@ public class StaticMappers
 - **Custom Member Mapping**: Use `.ForMember()` to customize how individual properties are mapped.
 - **Ignore Properties**: Use `.Ignore()` to skip mapping specific properties.
 - **Custom Mapping Functions**: Use `.WithCustomMapping()` to provide your own mapping logic.
+### Key Points
+- Reverse Mapping: `.Reverse()` adds the reverse direction only for simple mappings. It is not allowed after `WithCustomMapping`, `ForMember`, or `Ignore`. Define a separate reverse mapping instead.
+- Custom Member Mapping: Use `.ForMember()` to customize individual properties.
+- Ignore Properties: Use `.Ignore()` to skip specific destination properties.
+- Custom Mapping Functions: Use `.WithCustomMapping()` to provide your own mapping logic.
 
 For more details, see the sample profile in `Application/ZeroReflectionMapperProfile.cs`.
 
 ## Dependency Injection Registration
 To use ZeroReflection.Mapper with .NET Dependency Injection, register the mapping handlers and obtain an `IMapper` instance as follows:
+To use ZeroReflection.Mapper with .NET Dependency Injection, register the mapping services and obtain an `IMapper` instance as follows:
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -99,9 +117,26 @@ var myMapper = sp.GetRequiredService<IMapper>();
 ```
 
 - `RegisterZeroReflectionMapping()` scans and registers all mapping profiles and handlers.
+- `RegisterZeroReflectionMapping()` registers `IMapper` and the generated `IGeneratedMappingDispatcher`.
 - You can now inject or resolve `IMapper` anywhere in your application.
 
+Note: the optional `configure` delegate parameter on `RegisterZeroReflectionMapping` is currently not used by the generator output.
+
 This approach works seamlessly with ASP.NET Core or any .NET application using Microsoft.Extensions.DependencyInjection.
+
+## Using the mapper at runtime
+You can use either the generated static extension methods or the `IMapper` service:
+
+- Generated methods per map, for single objects:
+  - `var entity = model.MapToPersonEntity();`
+- Collections/arrays (generated helpers):
+  - `var list = MapPersonModelToPersonEntity.MapListToPersonEntity(models);`
+  - `var arr = MapPersonModelToPersonEntity.MapArrayToPersonEntity(modelsArray);`
+- Via `IMapper` (collections/arrays):
+  - `var list = myMapper.Map<System.Collections.Generic.List<PersonEntity>>(models);`
+  - `var arr = myMapper.Map<PersonModel[], PersonEntity[]>(modelsArray);`
+- Via `IMapper` (single object):
+  - `var entity = myMapper.MapSingleObject<PersonModel, PersonEntity>(model);`
 
 ## What is being generated
 
@@ -109,6 +144,7 @@ ZeroReflection.Mapper Source Generator produces several types of files to suppor
 
 ### 1. DI Registration Extension
 This code provides DI registration for all mapping components, including the core mapper, dispatcher, and individual mapping handlers:
+Registers the core mapper and the generated dispatcher.
 
 ```csharp
 // <auto-generated />
@@ -124,6 +160,8 @@ namespace ZeroReflection.Mapper.Generated
     // and each concrete IMap<TSource,TDestination> handler for direct resolution / testing / fallback.
     // Safe to call once at application startup (idempotent with typical DI containers registering singletons).
     // Generated at 2025-08-20T14:30:12.4508116+02:00
+    // Provides a single extension point to register generated mapping components into DI.
+    // Adds: IMapper (core implementation) and IGeneratedMappingDispatcher (fast dispatcher).
     public static class MappingServiceExtensions
     {
         /// <summary>Registers all generated mapping services (mapper, dispatcher, individual handlers).</summary>
@@ -142,6 +180,7 @@ This generated code ensures all mapping services are registered in your DI conta
 
 ### 2. Mapping Logic Example
 This code shows a typical generated mapping class for converting between models and entities, including support for collections, nested objects, and LINQ projection expressions:
+Typical generated mapping class for converting between models and entities, including support for collections, nested objects, and optional LINQ projection expressions:
 
 ```csharp
 // <auto-generated />
@@ -167,13 +206,14 @@ namespace ZeroReflection.Mapper.Generated
                 Name = source.Name,
                 Certificate = source.Certificate == null ? null : MapCertificateModelToCertificateEntity.MapToCertificateEntity(source.Certificate),
                 Addresses = MapAddressModelToAddressEntity.ListProjectionCompiled(source.Addresses)
+                Addresses = MapAddressModelToAddressEntity.MapListToAddressEntity(source.Addresses)
             };
         }
 
         public static System.Collections.Generic.List<global::Application.Models.Entities.PersonEntity> MapListToPersonEntity(System.Collections.Generic.List<global::Application.Models.ViewModels.PersonModel> source) => ZeroReflection.Mapper.CodeGeneration.MapCollectionHelpers.MapList<global::Application.Models.ViewModels.PersonModel,global::Application.Models.Entities.PersonEntity>(source, x => x.MapToPersonEntity());
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 
-        public static global::Application.Models.Entities.PersonEntity[] MapArrayToPersonEntity(global::Application.Models.ViewModels.PersonModel[] source)
+        public static global::Application.Models.Entities.PersonEntity[] MapArrayToPersonEntity(global::Application.Models.ViewViews.PersonModel[] source)
         {
             if (source == null) return null;
             var result = new global::Application.Models.Entities.PersonEntity[source.Length];
@@ -181,6 +221,7 @@ namespace ZeroReflection.Mapper.Generated
                 result[i] = source[i].MapToPersonEntity();
             return result;
         }
+            => ZeroReflection.Mapper.CodeGeneration.MapCollectionHelpers.MapArray<global::Application.Models.ViewModels.PersonModel,global::Application.Models.Entities.PersonEntity>(source, x => x.MapToPersonEntity());
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static global::Application.Models.Entities.PersonEntity[] MapListToPersonEntityArray(System.Collections.Generic.List<global::Application.Models.ViewModels.PersonModel> source)
@@ -195,6 +236,7 @@ namespace ZeroReflection.Mapper.Generated
         public static System.Collections.Generic.List<global::Application.Models.Entities.PersonEntity> MapArrayToPersonEntityList(global::Application.Models.ViewModels.PersonModel[] source) => ZeroReflection.Mapper.CodeGeneration.MapCollectionHelpers.MapArrayToList<global::Application.Models.ViewModels.PersonModel,global::Application.Models.Entities.PersonEntity>(source, x => x.MapToPersonEntity());
 
         /// <summary>Expression for single item projection using Map method.</summary>
+        // Projection members are generated when enabled in configuration (globally, or selectively for collection element types)
         public static System.Linq.Expressions.Expression<System.Func<global::Application.Models.ViewModels.PersonModel, global::Application.Models.Entities.PersonEntity>> Projection => source => source.MapToPersonEntity();
 
         /// <summary>Expression for List<TSource> projection using list mapping method.</summary>
@@ -214,6 +256,10 @@ This generated mapping class provides efficient conversion between types, includ
 
 ### 3. Generated Mapping Dispatcher Example
 A dispatcher is also generated to provide ultra-fast, reflection-free mapping between types. It uses type checks to route conversions for single objects, arrays, and lists. This enables efficient runtime mapping without reflection:
+A dispatcher provides reflection-free mapping between types. It routes conversions for single objects, arrays, and lists.
+
+- If `UseSwitchDispatcher = false` (default behavior in code example below), chained type checks are emitted.
+- If `UseSwitchDispatcher = true`, an index and switch-based jump table is emitted for faster dispatch.
 
 ```csharp
 // <auto-generated />
@@ -274,13 +320,102 @@ namespace ZeroReflection.Mapper.Generated
 }
 ```
 
-This dispatcher enables fast, type-safe mapping at runtime, avoiding reflection and supporting arrays, lists, and single objects.
+#### Switch jump-table variant (when `UseSwitchDispatcher = true`)
+Below is an abbreviated example of the switch-based dispatcher the generator emits. Dictionaries assign small integer keys for each mapping pair; a `switch` routes the request.
+
+```csharp
+// <auto-generated />
+namespace ZeroReflection.Mapper.Generated
+{
+    internal static class __GeneratedMappingDispatcherStatic
+    {
+        private static readonly System.Collections.Generic.Dictionary<(System.Type, System.Type), int> _arrayMapIndex = new()
+        {
+            { (typeof(PersonModel[]), typeof(PersonEntity[])), 1 },
+            { (typeof(ProductModel[]), typeof(ProductEntity[])), 2 },
+            // ... more pairs ...
+        };
+        private static readonly System.Collections.Generic.Dictionary<(System.Type, System.Type), int> _listMapIndex = new()
+        {
+            { (typeof(System.Collections.Generic.List<PersonModel>), typeof(System.Collections.Generic.List<PersonEntity>)), 1 },
+            { (typeof(System.Collections.Generic.List<ProductModel>), typeof(System.Collections.Generic.List<ProductEntity>)), 2 },
+            // ... more pairs ...
+        };
+        private static readonly System.Collections.Generic.Dictionary<(System.Type, System.Type), int> _objectMapIndex = new()
+        {
+            { (typeof(PersonModel), typeof(PersonEntity)), 1 },
+            { (typeof(ProductModel), typeof(ProductEntity)), 2 },
+            // ... only pairs with direct object maps ...
+        };
+
+        internal static bool TryMapArray(object source, System.Type sourceType, System.Type destType, out object result)
+        {
+            if (source is null) { result = null!; return true; }
+            if (!_arrayMapIndex.TryGetValue((sourceType, destType), out int key)) { result = null!; return false; }
+            switch (key)
+            {
+                case 1: result = MapPersonModelToPersonEntity.MapArrayToPersonEntity((PersonModel[])source)!; return true;
+                case 2: result = MapProductModelToProductEntity.MapArrayToProductEntity((ProductModel[])source)!; return true;
+                // ... more cases ...
+                default: result = null!; return false;
+            }
+        }
+
+        internal static bool TryMapList(object source, System.Type sourceType, System.Type destType, out object result)
+        {
+            if (source is null) { result = null!; return true; }
+            if (!_listMapIndex.TryGetValue((sourceType, destType), out int key)) { result = null!; return false; }
+            switch (key)
+            {
+                case 1: result = MapPersonModelToPersonEntity.MapListToPersonEntity((System.Collections.Generic.List<PersonModel>)source)!; return true;
+                case 2: result = MapProductModelToProductEntity.MapListToProductEntity((System.Collections.Generic.List<ProductModel>)source)!; return true;
+                // ... more cases ...
+                default: result = null!; return false;
+            }
+        }
+
+        internal static bool TryMapSingleObject(object source, System.Type sourceType, System.Type destType, out object result)
+        {
+            if (source is null) { result = null!; return true; }
+            if (!_objectMapIndex.TryGetValue((sourceType, destType), out int key)) { result = null!; return false; }
+            switch (key)
+            {
+                case 1: result = ((PersonModel)source).MapToPersonEntity(); return true;
+                case 2: result = ((ProductModel)source).MapToProductEntity(); return true;
+                // ... more cases ...
+                default: result = null!; return false;
+            }
+        }
+    }
+}
+```
+
+This variant avoids repeated `if` type comparisons and can reduce dispatch overhead when many mappings exist.
+
+## Configuration flags
+Set these in your `MapperProfile.Configure` method via the provided `MapperConfiguration` instance:
+
+- `EnableProjectionFunctions` (default `false`)
+  - When `true`, projection expressions and compiled delegates are emitted for every mapping.
+  - When `false`, the generator may still emit projection members selectively for mappings that appear as collection element types in other mappings.
+- `UseSwitchDispatcher` (default `true`)
+  - Emits a switch-based jump table for the dispatcher when `true`; chained type checks when `false`.
+- `ThrowIfPropertyMissing` (default `false`)
+  - Emits build-time `#error` diagnostics for unmapped destination properties unless explicitly ignored or custom-mapped.
+
+## Attributes
+- `IgnoreMapAttribute` on a destination or source property to exclude it from mapping.
+- `MapToAttribute("OtherName")` on a property to map by a different name.
+- `CustomMappingAttribute(typeof(Source), typeof(Destination))` on a method to use that method for the specified map.
+- `CustomPropertyMappingAttribute(typeof(Source), typeof(Destination), "PropertyName")` on a method to provide custom logic for a single destination property.
 
 ## Benchmarks
 
 Performance is a key focus of ZeroReflection.Mapper. Benchmarks are provided to demonstrate mapping speed, memory usage, and comparison to other mapping libraries.
 
 Benchmark code and scenarios can be found in the `ZeroReflection.Benchmarks/` project.
+
+The “WithSwitch” benchmark variants correspond to enabling `UseSwitchDispatcher`.
 
 ### Example Benchmark: Mapping a Complex Person Object
 

@@ -205,7 +205,6 @@ namespace ZeroReflection.Mapper.Generated
                 Age = source.Age,
                 Name = source.Name,
                 Certificate = source.Certificate == null ? null : MapCertificateModelToCertificateEntity.MapToCertificateEntity(source.Certificate),
-                Addresses = MapAddressModelToAddressEntity.ListProjectionCompiled(source.Addresses)
                 Addresses = MapAddressModelToAddressEntity.MapListToAddressEntity(source.Addresses)
             };
         }
@@ -242,12 +241,8 @@ namespace ZeroReflection.Mapper.Generated
         /// <summary>Expression for List<TSource> projection using list mapping method.</summary>
         public static System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.List<global::Application.Models.ViewModels.PersonModel>, System.Collections.Generic.List<global::Application.Models.Entities.PersonEntity>>> ListProjection => list => MapListToPersonEntity(list);
 
-        public static readonly System.Func<System.Collections.Generic.List<global::Application.Models.ViewModels.PersonModel>, System.Collections.Generic.List<global::Application.Models.Entities.PersonEntity>> ListProjectionCompiled = ListProjection.Compile();
-
         /// <summary>Expression for array projection using array mapping method.</summary>
         public static System.Linq.Expressions.Expression<System.Func<global::Application.Models.ViewModels.PersonModel[], global::Application.Models.Entities.PersonEntity[]>> ArrayProjection => array => MapArrayToPersonEntity(array);
-
-        public static readonly System.Func<global::Application.Models.ViewModels.PersonModel[], global::Application.Models.Entities.PersonEntity[]> ArrayProjectionCompiled = ArrayProjection.Compile();
     }
 }
 ```
@@ -495,23 +490,3 @@ OrderEntity _OrderEntity = new()
 
 
 ![Complex Object Mapping Benchmark](screenshots/MappingBenchmarksOrderEntity_WithSwitch2.png)
-
-
-### Example Benchmark: Mapping Person Object
-
-The following sample is used to benchmark mapping `Person` object:
-
-```csharp
-PersonEntity PersonSample = new()
-    {
-        Email = "person@mail.com",
-        Age = 38, 
-        Name = "Person"
-    };
-```
-
-#### Long Running Job:
-
-![Complex Object Mapping Benchmark](screenshots/MappingBenchmarksSimpleObject_LongRunningJob.png)
-
-*Example: Mapping speed comparison for a single Person object using ZeroReflection.Mapper, Mapster, and AutoMapper.*

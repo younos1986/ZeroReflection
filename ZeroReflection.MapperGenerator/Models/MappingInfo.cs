@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ZeroReflection.Mapper.CodeGeneration.Models
+namespace ZeroReflection.MapperGenerator.Models
 {
     public class MappingInfo
     {

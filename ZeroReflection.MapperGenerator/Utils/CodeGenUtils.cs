@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using ZeroReflection.Mapper.CodeGeneration.Models;
+using ZeroReflection.MapperGenerator.Models;
 
-namespace ZeroReflection.Mapper.CodeGeneration.Utils
+namespace ZeroReflection.MapperGenerator.Utils
 {
     internal static class CodeGenUtils
     {

@@ -6,15 +6,20 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         
-        <!-- Define custom variable -->
+        <!-- Define custom variables -->
         <EnableZeroReflectionMediatorGeneratedCode>true</EnableZeroReflectionMediatorGeneratedCode>
+        <ZeroReflectionMediatorUseSwitchDispatcher>true</ZeroReflectionMediatorUseSwitchDispatcher>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ZeroReflection.Mapper\ZeroReflection.Mapper.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
+        <ProjectReference Include="..\ZeroReflection.Mapper\ZeroReflection.Mapper.csproj" />
+        <ProjectReference Include="..\ZeroReflection.MapperGenerator\ZeroReflection.MapperGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
 
         <CompilerVisibleProperty Include="EnableZeroReflectionMediatorGeneratedCode" />
-        <ProjectReference Include="..\ZeroReflection.Mediator\ZeroReflection.Mediator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
+        <CompilerVisibleProperty Include="ZeroReflectionMediatorUseSwitchDispatcher" />
+        
+        <ProjectReference Include="..\ZeroReflection.Mediator\ZeroReflection.Mediator.csproj" />
+        <ProjectReference Include="..\ZeroReflection.MediatorGenerator\ZeroReflection.MediatorGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>

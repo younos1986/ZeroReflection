@@ -26,6 +26,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Application\Application.csproj" />
       <ProjectReference Include="..\ZeroReflection.Mapper\ZeroReflection.Mapper.csproj" />
+      <ProjectReference Include="..\ZeroReflection.MapperGenerator\ZeroReflection.MapperGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
     </ItemGroup>
 
 </Project>

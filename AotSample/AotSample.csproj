@@ -14,15 +14,27 @@
   </PropertyGroup>
 
   <ItemGroup>
-      <ProjectReference Include="..\ZeroReflection.Mapper\ZeroReflection.Mapper.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
+      <ProjectReference Include="..\ZeroReflection.MapperGenerator\ZeroReflection.MapperGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
 
       <!-- Use a normal project reference so the assembly is included at runtime -->
       <ProjectReference Include="..\ZeroReflection.Mapper\ZeroReflection.Mapper.csproj" />
+
+      <ProjectReference Include="..\ZeroReflection.MediatorGenerator\ZeroReflection.MediatorGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
+
+      <!-- Use a normal project reference so the assembly is included at runtime -->
+      <ProjectReference Include="..\ZeroReflection.Mediator\ZeroReflection.Mediator.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
   </ItemGroup>
+
+    <ItemGroup>
+        <TrimmerRootAssembly Include="ZeroReflection.Mapper" />
+        <TrimmerRootAssembly Include="ZeroReflection.Mediator" />
+        <TrimmerRootAssembly Include="Microsoft.Extensions.DependencyInjection" />
+        <TrimmerRootAssembly Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    </ItemGroup>
 
 </Project>

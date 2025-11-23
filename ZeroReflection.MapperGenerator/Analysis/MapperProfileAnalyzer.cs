@@ -3,23 +3,21 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ZeroReflection.Mapper.CodeGeneration.Extensions;
-using ZeroReflection.Mapper.CodeGeneration.Models;
+using ZeroReflection.MapperGenerator.Extensions;
+using ZeroReflection.MapperGenerator.Models;
 
-namespace ZeroReflection.Mapper.CodeGeneration.Analysis
+namespace ZeroReflection.MapperGenerator.Analysis
 {
     public class MapperProfileAnalyzer
     {
         private readonly HashSet<(string, string)> _processedMappings = new HashSet<(string, string)>();
         private readonly Queue<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> _pendingMappings = new Queue<(INamedTypeSymbol, INamedTypeSymbol)>();
         private Compilation _compilation;
-        //private GeneratorExecutionContext _context; // legacy
-        private MapperConfiguration _configuration = new MapperConfiguration();
-        public MapperConfiguration Configuration => _configuration;
+        private GeneratorConfiguration _configuration = new GeneratorConfiguration();
+        public GeneratorConfiguration Configuration => _configuration;
 
         public List<MappingInfo> AnalyzeProfiles(GeneratorExecutionContext context)
         {
-            //_context = context;
             _compilation = context.Compilation;
             var profileSymbols = FindMapperProfiles(context);
             return AnalyzeProfilesCore(profileSymbols, context.Compilation);
@@ -29,8 +27,7 @@ namespace ZeroReflection.Mapper.CodeGeneration.Analysis
         public List<MappingInfo> AnalyzeProfiles(Compilation compilation, IEnumerable<ClassDeclarationSyntax> profileSymbols)
         {
             _compilation = compilation;
-            //_context = default; // not used in incremental path except legacy fallbacks
-            _configuration = new MapperConfiguration(); // ensure fresh config per analysis
+            _configuration = new GeneratorConfiguration(); // ensure fresh config per analysis
             return AnalyzeProfilesCore(profileSymbols.ToList(), compilation);
         }
 

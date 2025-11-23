@@ -1,9 +1,9 @@
-using System.Text;
 using System.Collections.Generic;
-using ZeroReflection.Mapper.CodeGeneration.Models;
-using ZeroReflection.Mapper.CodeGeneration.Utils;
+using System.Text;
+using ZeroReflection.MapperGenerator.Models;
+using ZeroReflection.MapperGenerator.Utils;
 
-namespace ZeroReflection.Mapper.CodeGeneration.Emit
+namespace ZeroReflection.MapperGenerator.Emit
 {
     internal static class ServiceRegistrationEmitter
     {

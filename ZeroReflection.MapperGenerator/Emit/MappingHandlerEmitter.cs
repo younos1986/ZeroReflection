@@ -1,10 +1,10 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Collections.Generic;
-using ZeroReflection.Mapper.CodeGeneration.Models;
-using ZeroReflection.Mapper.CodeGeneration.Utils;
+using ZeroReflection.MapperGenerator.Models;
+using ZeroReflection.MapperGenerator.Utils;
 
-namespace ZeroReflection.Mapper.CodeGeneration.Emit
+namespace ZeroReflection.MapperGenerator.Emit
 {
     internal static class MappingHandlerEmitter
     {
@@ -95,12 +95,12 @@ namespace ZeroReflection.Mapper.CodeGeneration.Emit
             }
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine($"        public static System.Collections.Generic.List<{dstQ}> MapListTo{mapping.Destination}(System.Collections.Generic.List<{srcQ}> source) => ZeroReflection.Mapper.CodeGeneration.MapCollectionHelpers.MapList<{srcQ},{dstQ}>(source, x => x.MapTo{mapping.Destination}());");
+            sb.AppendLine($"        public static System.Collections.Generic.List<{dstQ}> MapListTo{mapping.Destination}(System.Collections.Generic.List<{srcQ}> source) => ZeroReflection.Mapper.MapCollectionHelpers.MapList<{srcQ},{dstQ}>(source, x => x.MapTo{mapping.Destination}());");
             sb.AppendLine("        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
             sb.AppendLine();
             sb.AppendLine($"        public static {dstQ}[] MapArrayTo{mapping.Destination}({srcQ}[] source)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            return ZeroReflection.Mapper.CodeGeneration.MapCollectionHelpers.MapArray<{srcQ},{dstQ}>(source, x => x.MapTo{mapping.Destination}());");
+            sb.AppendLine($"            return ZeroReflection.Mapper.MapCollectionHelpers.MapArray<{srcQ},{dstQ}>(source, x => x.MapTo{mapping.Destination}());");
             sb.AppendLine("        }");
             sb.AppendLine();
             sb.AppendLine("        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
@@ -113,7 +113,7 @@ namespace ZeroReflection.Mapper.CodeGeneration.Emit
             sb.AppendLine("            return result;");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine($"        public static System.Collections.Generic.List<{dstQ}> MapArrayTo{mapping.Destination}List({srcQ}[] source) => ZeroReflection.Mapper.CodeGeneration.MapCollectionHelpers.MapArrayToList<{srcQ},{dstQ}>(source, x => x.MapTo{mapping.Destination}());");
+            sb.AppendLine($"        public static System.Collections.Generic.List<{dstQ}> MapArrayTo{mapping.Destination}List({srcQ}[] source) => ZeroReflection.Mapper.MapCollectionHelpers.MapArrayToList<{srcQ},{dstQ}>(source, x => x.MapTo{mapping.Destination}());");
         }
 
         private static void GenerateCustomMappingInvocation(StringBuilder sb, MappingInfo mapping)

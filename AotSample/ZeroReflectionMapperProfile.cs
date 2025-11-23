@@ -12,6 +12,6 @@ public class ZeroReflectionMapperProfile : MapperProfile
         config.EnableProjectionFunctions = false;
         config.UseSwitchDispatcher = true;
         
-        config.CreateMap<PersonModel, PersonEntity>().Reverse();
+        config.CreateMap<UserModel, UserEntity>().Reverse();
     }
 }

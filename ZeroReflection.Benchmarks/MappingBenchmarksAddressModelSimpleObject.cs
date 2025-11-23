@@ -1,10 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using Microsoft.Extensions.DependencyInjection;
-using ZeroReflection.Mapper.Generated;
 using Application.Models.ViewModels;
 using Application.Models.Entities;
 using Mapster;
+using ZeroReflection.Mapper.Generated;
 using IMapper = ZeroReflection.Mapper.IMapper;
 
 namespace ZeroReflection.Benchmarks;

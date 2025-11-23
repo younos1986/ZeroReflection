@@ -1,4 +1,4 @@
-﻿﻿# ZeroReflection.Mediator
+﻿# ZeroReflection.Mediator
 
 ZeroReflection.Mediator is a high-performance .NET source generator for implementing the Mediator pattern with zero runtime reflection. It provides compile-time code generation for request handling and validation logic in your applications.
 
@@ -13,7 +13,7 @@ ZeroReflection.Mediator is a high-performance .NET source generator for implemen
 ## Getting Started
 
 ### Installation
-Add the NuGet packages to your project:
+Add the NuGet package to your project:
 
 ```bash
 dotnet add package ZeroReflection.Mediator

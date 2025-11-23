@@ -1,12 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using ZeroReflection.Mapper.CodeGeneration.Models;
-using ZeroReflection.Mapper.CodeGeneration.Emit;
-using ZeroReflection.Mapper.CodeGeneration.Utils;
+using ZeroReflection.MapperGenerator.Emit;
+using ZeroReflection.MapperGenerator.Models;
+using ZeroReflection.MapperGenerator.Utils;
 
-namespace ZeroReflection.Mapper.CodeGeneration
+namespace ZeroReflection.MapperGenerator
 {
     public class MapperCodeGenerator
     {

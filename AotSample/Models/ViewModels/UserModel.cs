@@ -1,6 +1,6 @@
-﻿namespace AotSample.Models.Entities;
+﻿namespace AotSample.Models.ViewModels;
 
-public partial class PersonEntity
+public class UserModel
 {
     public required string Email { get; set; } 
     public required int Age { get; set; }

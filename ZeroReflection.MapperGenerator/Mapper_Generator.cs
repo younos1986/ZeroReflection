@@ -1,12 +1,12 @@
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Linq;
-using ZeroReflection.Mapper.CodeGeneration.Analysis;
+using ZeroReflection.MapperGenerator.Analysis;
 
-namespace ZeroReflection.Mapper.CodeGeneration
+namespace ZeroReflection.MapperGenerator
 {
     [Generator]
-    public class MapperGenerator : IIncrementalGenerator
+    public class Mapper_Generator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {

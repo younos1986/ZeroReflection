@@ -8,6 +8,10 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <LangVersion>latest</LangVersion>
+        
+        <!-- Disable Mediator code generation for test project since we use Application's generated code -->
+        <EnableZeroReflectionMediatorGeneratedCode>false</EnableZeroReflectionMediatorGeneratedCode>
+        <ZeroReflectionMediatorUseSwitchDispatcher>true</ZeroReflectionMediatorUseSwitchDispatcher>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,7 +29,11 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Application\Application.csproj" />
-      <ProjectReference Include="..\ZeroReflection.Mediator\ZeroReflection.Mediator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
+
+      <ProjectReference Include="..\ZeroReflection.Mediator\ZeroReflection.Mediator.csproj"  />
+	  <ProjectReference Include="..\ZeroReflection.MediatorGenerator\ZeroReflection.MediatorGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
+		<CompilerVisibleProperty Include="EnableZeroReflectionMediatorGeneratedCode" />
+		<CompilerVisibleProperty Include="ZeroReflectionMediatorUseSwitchDispatcher" />
     </ItemGroup>
 
 </Project>

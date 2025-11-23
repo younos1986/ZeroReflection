@@ -1,26 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ZeroReflection.Mediator;
 
-public class MediatorImplementation(IServiceProvider serviceProvider) : IMediator
+public class MediatorImplementation : IMediator
 {
+    private readonly IGeneratedMediatorDispatcher _dispatcher;
+
+    public MediatorImplementation(IGeneratedMediatorDispatcher dispatcher)
+    {
+        _dispatcher = dispatcher;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
-        // Validation logic
-        var validatorType = typeof(IValidator<>).MakeGenericType(request.GetType());
-        var validator = serviceProvider.GetService(validatorType);
-        if (validator != null)
-        {
-            ((dynamic)validator).Validate((dynamic)request);
-        }
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
 
-        var handlerType = typeof(IRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResponse));
-        dynamic handler = serviceProvider.GetService(handlerType);
-        if (handler == null)
-            throw new InvalidOperationException($"No handler registered for {request.GetType()}");
-        return await handler.Handle((dynamic)request, cancellationToken);
+        var requestType = request.GetType();
+        var responseType = typeof(TResponse);
+
+        // Validation logic
+        _dispatcher.TryValidate(request, requestType);
+
+        // Handle request
+        var (handled, result) = await _dispatcher.TryHandle(request, requestType, responseType, cancellationToken);
+        
+        if (!handled)
+            throw new InvalidOperationException($"No handler registered for {requestType.FullName} with response type {responseType.FullName}");
+
+        return (TResponse)result;
     }
 }

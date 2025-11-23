@@ -1,28 +1,27 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Text.Json;
-using AotSample.Models.Entities;
+using AotSample.Commands;
 using AotSample.Models.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using ZeroReflection.Mapper;
 using ZeroReflection.Mapper.Generated;
+using ZeroReflection.Mediator;
 
 Console.WriteLine("Hello, World!");
 
 var services = new ServiceCollection();
 services.RegisterZeroReflectionMapping();
+services.RegisterZeroReflectionMediatorHandlers();
 var sp = services.BuildServiceProvider();
-var myMapper = sp.GetRequiredService<IMapper>();
+var myMediator = sp.GetRequiredService<IMediator>();
 
-var personModel = new PersonModel
+await myMediator.Send(new CreateUserCommand
 {
-    Name = "Younes Baghei Moghaddam",
-    Age = 38,
-    Email = "unos.bm65@gmail.com"
-};
-
-var personEntity = myMapper.MapSingleObject<PersonModel, PersonEntity>(personModel);
-
-Console.WriteLine(personEntity.Name + " " + personEntity.Age + " " + personEntity.Email);
+    UserModel = new UserModel
+    {
+        Name = "Younes Baghei Moghaddam",
+        Age = 38,
+        Email = "unos.bm65@gmail.com"
+    }
+});
 
 Console.ReadKey();

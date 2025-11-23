@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Runtime.CompilerServices;
 
+#nullable enable
+
 namespace ZeroReflection.Mapper;
 
 /// <summary>
@@ -37,7 +39,7 @@ public class Mapper(IGeneratedMappingDispatcher dispatcher) : IMapper
     {
         if (source is null)
             return default!;
-        return (TDestination)MapInternal(source!, typeof(TSource), typeof(TDestination));
+        return (TDestination)MapInternal(source, typeof(TSource), typeof(TDestination));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -75,7 +77,7 @@ public class Mapper(IGeneratedMappingDispatcher dispatcher) : IMapper
     {
         if (source is null)
             return default!;
-        if (dispatcher.TryMapSingleObject(source!, typeof(TSource), typeof(TDestination), out var result))
+        if (dispatcher.TryMapSingleObject(source, typeof(TSource), typeof(TDestination), out var result))
             return (TDestination)result;
         throw new InvalidOperationException($"Cannot map single object from {typeof(TSource).FullName} to {typeof(TDestination).FullName}.");
     }

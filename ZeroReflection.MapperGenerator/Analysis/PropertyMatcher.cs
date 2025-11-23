@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using ZeroReflection.Mapper.CodeGeneration.Extensions;
-using ZeroReflection.Mapper.CodeGeneration.Models;
+using ZeroReflection.MapperGenerator.Extensions;
+using ZeroReflection.MapperGenerator.Models;
 
-namespace ZeroReflection.Mapper.CodeGeneration.Analysis
+namespace ZeroReflection.MapperGenerator.Analysis
 {
     public class PropertyMatcher
     {

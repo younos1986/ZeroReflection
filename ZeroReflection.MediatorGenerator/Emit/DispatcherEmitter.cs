@@ -190,9 +190,9 @@ namespace ZeroReflection.MediatorGenerator.Emit
 
     internal class HandlerInfo
     {
-        public string RequestType { get; set; }
-        public string ResponseType { get; set; }
-        public string HandlerType { get; set; }
-        public string Namespace { get; set; }
+        public string RequestType { get; set; } = string.Empty;
+        public string ResponseType { get; set; } = string.Empty;
+        public string HandlerType { get; set; } = string.Empty;
+        public string Namespace { get; set; } = string.Empty;
     }
 }

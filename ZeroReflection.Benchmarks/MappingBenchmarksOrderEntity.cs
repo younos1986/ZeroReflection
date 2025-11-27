@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using Microsoft.Extensions.DependencyInjection;
 using ZeroReflection.Mapper.Generated;
@@ -20,11 +20,10 @@ namespace ZeroReflection.Benchmarks;
 public class MappingBenchmarksOrderEntity
 {
     private IMapper _myMapper = default!;
-    private OrderEntity _singlePerson = default!;
 
-    private AutoMapper.IMapper _mapper;
+    private AutoMapper.IMapper _mapper = default!;
 
-    private static OrderEntity _OrderEntity = new()
+    private static OrderEntity _orderEntity = new()
     {
         Id = 1,
         OrderNumber = "OrderNumber",
@@ -93,7 +92,7 @@ public class MappingBenchmarksOrderEntity
         var services = new ServiceCollection();
         services.RegisterZeroReflectionMapping();
         services.AddLogging();
-        services.AddAutoMapper(cfg => { },
+        services.AddAutoMapper(_ => { },
             typeof(OrderEntity).Assembly);
 
         var sp = services.BuildServiceProvider();
@@ -106,21 +105,21 @@ public class MappingBenchmarksOrderEntity
     public OrderModel ZeroReflection()
     {
         //return OrderEntity.MapToOrderModel();
-        return _myMapper.MapSingleObject<OrderEntity, OrderModel>(_OrderEntity);
+        return _myMapper.MapSingleObject<OrderEntity, OrderModel>(_orderEntity);
     }
 
     [Benchmark]
     [BenchmarkCategory("Single")]
     public OrderModel Mapster()
     {
-        return _OrderEntity.Adapt<OrderModel>();
+        return _orderEntity.Adapt<OrderModel>();
     }
 
     [Benchmark]
     [BenchmarkCategory("Single")]
     public OrderModel AutoMapper()
     {
-        return _mapper.Map<OrderModel>(_OrderEntity);
+        return _mapper.Map<OrderModel>(_orderEntity);
     }
 
     //***********************************************************************************

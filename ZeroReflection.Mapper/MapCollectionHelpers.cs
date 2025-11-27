@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -11,14 +10,9 @@ namespace ZeroReflection.Mapper;
 /// </summary>
 public static class MapCollectionHelpers
 {
-    // Caches for compiled delegates
-    //private static readonly ConcurrentDictionary<(Type, Type), Delegate> SingleObjectMapCache = new();
-
-    // Specialized cache for direct property/field mapping delegates
-    private static readonly ConcurrentDictionary<(Type, Type), Delegate> DirectMapCache = new();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static List<TDest> MapList<TSrc, TDest>(List<TSrc> source, Func<TSrc, TDest> map)
+    public static List<TDest>? MapList<TSrc, TDest>(List<TSrc>? source, Func<TSrc, TDest> map)
     {
         if (source == null) return null;
         var count = source.Count;
@@ -31,7 +25,7 @@ public static class MapCollectionHelpers
     }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static List<TDest> MapArrayToList<TSrc, TDest>(TSrc[] source, Func<TSrc, TDest> map)
+    public static List<TDest>? MapArrayToList<TSrc, TDest>(TSrc[]? source, Func<TSrc, TDest> map)
     {
         if (source == null) return null;
         int len = source.Length;
@@ -44,7 +38,7 @@ public static class MapCollectionHelpers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TDest[] MapArray<TSrc, TDest>(TSrc[] source, Func<TSrc, TDest> map)
+    public static TDest[]? MapArray<TSrc, TDest>(TSrc[]? source, Func<TSrc, TDest> map)
     {
         if (source == null) return null;
         int len = source.Length;

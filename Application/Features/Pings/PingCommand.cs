@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+﻿﻿using System.Text.Json.Serialization;
 using ZeroReflection.Mediator;
 
 namespace Application.Features.Pings;
@@ -13,16 +13,16 @@ public enum MessageType
 
 public class PingCommandChild
 {
-    public string ChildMessage { get; set; }
+    public required string ChildMessage { get; set; }
     public MessageType ChildMessageType { get; set; }
 }
 
 public class PingCommand : IRequest<string>
 {
-    public string Message { get; set; }
+    public required string Message { get; set; }
     public MessageType MessageType { get; set; }
     
-    public PingCommandChild PingCommandChild { get; set; }
+    public required PingCommandChild PingCommandChild { get; set; }
 }
 
 public class PingCommandValidator : IValidator<PingCommand>

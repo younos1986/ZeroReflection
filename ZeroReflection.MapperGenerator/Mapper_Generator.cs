@@ -6,7 +6,9 @@ using ZeroReflection.MapperGenerator.Analysis;
 namespace ZeroReflection.MapperGenerator
 {
     [Generator]
+#pragma warning disable IDE1006 // Naming Styles - Generator naming convention requires underscore
     public class Mapper_Generator : IIncrementalGenerator
+#pragma warning restore IDE1006
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
@@ -20,7 +22,7 @@ namespace ZeroReflection.MapperGenerator
                             return cds;
                         return null;
                     })
-                .Where(static c => c is not null)!;
+                .Where(static c => c is not null);
 
             var collectedProfiles = profileClasses.Collect();
 
@@ -30,10 +32,10 @@ namespace ZeroReflection.MapperGenerator
             context.RegisterSourceOutput(combined, static (spc, source) =>
             {
                 var compilation = source.Left;
-                var profiles = source.Right!; // ImmutableArray<ClassDeclarationSyntax?>
+                var profiles = source.Right;
                 if (profiles.Length == 0) return;
 
-                var nonNullProfiles = profiles.Where(p => p is not null)!.Cast<ClassDeclarationSyntax>();
+                var nonNullProfiles = profiles.Where(p => p is not null).Cast<ClassDeclarationSyntax>();
                 var analyzer = new MapperProfileAnalyzer();
                 var mappings = analyzer.AnalyzeProfiles(compilation, nonNullProfiles);
                 if (mappings.Count == 0) return;

@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using Microsoft.Extensions.DependencyInjection;
 using ZeroReflection.Mapper.Generated;
@@ -19,9 +19,8 @@ namespace ZeroReflection.Benchmarks;
 public class MappingBenchmarksOrderEntityComplexObject
 {
     private IMapper _myMapper = default!;
-    private OrderEntity _singlePerson = default!;
 
-    private AutoMapper.IMapper _mapper;
+    private AutoMapper.IMapper _mapper = default!;
 
     private static OrderEntity _OrderEntity = new()
     {

@@ -97,7 +97,7 @@ public class MapperOneObjectTests
         TestModel? nullModel = null;
         
         // Act
-        var result = _mapper.Map<TestEntity>(nullModel);
+        var result = _mapper.Map<TestEntity>(nullModel!);
         
         // Assert
         Assert.Null(result);

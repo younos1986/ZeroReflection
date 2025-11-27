@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using Microsoft.Extensions.DependencyInjection;
 using Application.Models.ViewModels;
@@ -20,10 +20,9 @@ namespace ZeroReflection.Benchmarks;
 public class MappingBenchmarksAddressModelSimpleObject
 {
     private IMapper _myMapper = default!;
-    private AddressEntity _singleAddress = default!;
     
-    private AutoMapper.IMapper _mapper;
-    private static AddressModel AddressModel = new() { Street = "123 Main St", City = "Sample City", ZipCode = "12345" };
+    private AutoMapper.IMapper _mapper = default!;
+    private static AddressModel _addressModel = new() { Street = "123 Main St", City = "Sample City", ZipCode = "12345" };
     private static AddressModel[] _addressArray = [];
     private static List<AddressModel> _addressList = [];
 
@@ -47,7 +46,7 @@ public class MappingBenchmarksAddressModelSimpleObject
         var services = new ServiceCollection();
         services.RegisterZeroReflectionMapping();
         services.AddLogging();
-        services.AddAutoMapper(cfg => { },
+        services.AddAutoMapper(_ => { },
             typeof(AddressEntity).Assembly);
         
         var sp = services.BuildServiceProvider();
@@ -59,21 +58,21 @@ public class MappingBenchmarksAddressModelSimpleObject
     [BenchmarkCategory("Single")]
     public AddressEntity ZeroReflection()
     {
-        return _myMapper.MapSingleObject<AddressModel, AddressEntity>(AddressModel);
+        return _myMapper.MapSingleObject<AddressModel, AddressEntity>(_addressModel);
     }
     
     [Benchmark]
     [BenchmarkCategory("Single")]
     public AddressEntity Mapster()
     {
-        return AddressModel.Adapt<AddressEntity>();
+        return _addressModel.Adapt<AddressEntity>();
     }
     
     [Benchmark]
     [BenchmarkCategory("Single")]
     public AddressEntity AutoMapper()
     {
-        return _mapper.Map<AddressEntity>(AddressModel);
+        return _mapper.Map<AddressEntity>(_addressModel);
     }
     
     //***********************************************************************************

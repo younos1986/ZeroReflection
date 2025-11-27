@@ -9,13 +9,14 @@ namespace ZeroReflection.MapperGenerator.Extensions
         public static List<IPropertySymbol> GetAllPublicProperties(this INamedTypeSymbol typeSymbol)
         {
             var result = new List<IPropertySymbol>();
-            while (typeSymbol != null && typeSymbol.SpecialType != SpecialType.System_Object)
+            INamedTypeSymbol? currentType = typeSymbol;
+            while (currentType != null && currentType.SpecialType != SpecialType.System_Object)
             {
-                var props = typeSymbol.GetMembers()
+                var props = currentType.GetMembers()
                     .OfType<IPropertySymbol>()
                     .Where(p => p.DeclaredAccessibility == Accessibility.Public);
                 result.AddRange(props);
-                typeSymbol = typeSymbol.BaseType;
+                currentType = currentType.BaseType;
             }
             return result;
         }
@@ -25,7 +26,7 @@ namespace ZeroReflection.MapperGenerator.Extensions
             return property.GetAttributes().Any(a => a.AttributeClass?.Name == "IgnoreMapAttribute");
         }
 
-        public static AttributeData GetMapToAttribute(this IPropertySymbol property)
+        public static AttributeData? GetMapToAttribute(this IPropertySymbol property)
         {
             return property.GetAttributes()
                 .FirstOrDefault(a => a.AttributeClass?.Name == "MapToAttribute" && a.ConstructorArguments.Length == 1);

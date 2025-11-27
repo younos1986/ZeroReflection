@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -71,11 +71,14 @@ namespace ZeroReflection.MediatorGenerator
             });
         }
 
-        private static HashSet<string> CollectHandlerNamespaces(Compilation compilation, IEnumerable<ClassDeclarationSyntax> handlers)
+        private static HashSet<string> CollectHandlerNamespaces(Compilation compilation, IEnumerable<ClassDeclarationSyntax?> handlers)
         {
             var namespaces = new HashSet<string>();
             foreach (var handler in handlers)
             {
+                if (handler == null)
+                    continue;
+                    
                 var handlerNamespace = (handler.Parent as NamespaceDeclarationSyntax)?.Name.ToString();
                 if (!string.IsNullOrWhiteSpace(handlerNamespace) && handlerNamespace != "<global namespace>")
                     namespaces.Add(handlerNamespace);
@@ -105,13 +108,16 @@ namespace ZeroReflection.MediatorGenerator
             return namespaces;
         }
 
-        private static List<HandlerInfo> CollectHandlers(Compilation compilation, IEnumerable<ClassDeclarationSyntax> classNodes, HashSet<string> namespaces)
+        private static List<HandlerInfo> CollectHandlers(Compilation compilation, IEnumerable<ClassDeclarationSyntax?> classNodes, HashSet<string> namespaces)
         {
             var handlers = new List<HandlerInfo>();
             
             // Collect from current project
             foreach (var handler in classNodes)
             {
+                if (handler == null || handler.BaseList == null)
+                    continue;
+                    
                 var handlerName = handler.Identifier.Text;
                 var interfaces = handler.BaseList.Types.Select(t => t.ToString()).ToList();
                 
@@ -141,13 +147,16 @@ namespace ZeroReflection.MediatorGenerator
             return handlers;
         }
 
-        private static List<ValidatorInfo> CollectValidators(Compilation compilation, IEnumerable<ClassDeclarationSyntax> classNodes, HashSet<string> namespaces)
+        private static List<ValidatorInfo> CollectValidators(Compilation compilation, IEnumerable<ClassDeclarationSyntax?> classNodes, HashSet<string> namespaces)
         {
             var validators = new List<ValidatorInfo>();
             
             // Collect from current project
             foreach (var validator in classNodes)
             {
+                if (validator == null || validator.BaseList == null)
+                    continue;
+                    
                 var validatorName = validator.Identifier.Text;
                 var interfaces = validator.BaseList.Types.Select(t => t.ToString()).ToList();
                 
@@ -353,8 +362,8 @@ namespace ZeroReflection.MediatorGenerator
 
     internal class ValidatorInfo
     {
-        public string ValidatorType { get; set; }
-        public string RequestType { get; set; }
-        public string Namespace { get; set; }
+        public string ValidatorType { get; set; } = string.Empty;
+        public string RequestType { get; set; } = string.Empty;
+        public string Namespace { get; set; } = string.Empty;
     }
 }

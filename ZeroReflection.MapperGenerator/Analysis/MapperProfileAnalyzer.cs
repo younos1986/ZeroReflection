@@ -12,7 +12,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
     {
         private readonly HashSet<(string, string)> _processedMappings = new HashSet<(string, string)>();
         private readonly Queue<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> _pendingMappings = new Queue<(INamedTypeSymbol, INamedTypeSymbol)>();
-        private Compilation _compilation;
+        private Compilation? _compilation;
         private GeneratorConfiguration _configuration = new GeneratorConfiguration();
         public GeneratorConfiguration Configuration => _configuration;
 
@@ -77,8 +77,8 @@ namespace ZeroReflection.MapperGenerator.Analysis
                             }
                         }
                     }
-                    ProcessCreateMapCalls(method, semanticModel, mappings, mappingSet, reverseSet);
-                    ProcessReverseCalls(method, mappingSet, reverseSet);
+                    ProcessCreateMapCalls(method, semanticModel, mappings, mappingSet);
+                    ProcessReverseCalls(method, reverseSet);
                 }
                 ProcessCustomMappingAttributes(profile, semanticModel, mappings, mappingSet);
             }
@@ -121,7 +121,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
         }
 
         private void ProcessCreateMapCalls(MethodDeclarationSyntax method, SemanticModel semanticModel, 
-            List<MappingInfo> mappings, HashSet<(string, string)> mappingSet, HashSet<(string, string)> reverseSet)
+            List<MappingInfo> mappings, HashSet<(string, string)> mappingSet)
         {
             var createMapVars = new Dictionary<string, (string srcType, string dstType)>();
             var createMapCalls = method.DescendantNodes()
@@ -168,10 +168,10 @@ namespace ZeroReflection.MapperGenerator.Analysis
                     switch (methodName)
                     {
                         case "ForMember":
-                            ProcessForMemberCall(chainedCall, mapping, semanticModel);
+                            ProcessForMemberCall(chainedCall, mapping);
                             break;
                         case "Ignore":
-                            ProcessIgnoreCall(chainedCall, mapping, semanticModel);
+                            ProcessIgnoreCall(chainedCall, mapping);
                             break;
                         case "WithCustomMapping":
                             ProcessWithCustomMappingCall(chainedCall, mapping, semanticModel);
@@ -204,10 +204,10 @@ namespace ZeroReflection.MapperGenerator.Analysis
                         switch (methodName)
                         {
                             case "ForMember":
-                                ProcessForMemberCall(invocation, mapping, semanticModel);
+                                ProcessForMemberCall(invocation, mapping);
                                 break;
                             case "Ignore":
-                                ProcessIgnoreCall(invocation, mapping, semanticModel);
+                                ProcessIgnoreCall(invocation, mapping);
                                 break;
                             case "WithCustomMapping":
                                 ProcessWithCustomMappingCall(invocation, mapping, semanticModel);
@@ -218,7 +218,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
             }
         }
 
-        private void ProcessForMemberCall(InvocationExpressionSyntax call, MappingInfo mapping, SemanticModel semanticModel)
+        private void ProcessForMemberCall(InvocationExpressionSyntax call, MappingInfo mapping)
         {
             if (call.ArgumentList.Arguments.Count >= 2)
             {
@@ -226,7 +226,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
                 var sourceExpressionArg = call.ArgumentList.Arguments[1];
                 
                 // Extract property name from lambda expression (dest => dest.PropertyName)
-                string propertyName = ExtractPropertyNameFromLambda(propertyArg.Expression);
+                string? propertyName = ExtractPropertyNameFromLambda(propertyArg.Expression);
                 
                 // Extract the lambda body from the source expression (the part after =>)
                 string customExpression = ExtractLambdaBody(sourceExpressionArg.Expression);
@@ -264,14 +264,14 @@ namespace ZeroReflection.MapperGenerator.Analysis
             }
         }
 
-        private void ProcessIgnoreCall(InvocationExpressionSyntax call, MappingInfo mapping, SemanticModel semanticModel)
+        private void ProcessIgnoreCall(InvocationExpressionSyntax call, MappingInfo mapping)
         {
             if (call.ArgumentList.Arguments.Count >= 1)
             {
                 var propertyArg = call.ArgumentList.Arguments[0];
                 
                 // Extract property name from lambda expression or string
-                string propertyName = ExtractPropertyNameFromArgument(propertyArg.Expression);
+                string? propertyName = ExtractPropertyNameFromArgument(propertyArg.Expression);
                 
                 if (!string.IsNullOrEmpty(propertyName))
                 {
@@ -309,7 +309,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
             }
         }
 
-        private string ExtractPropertyNameFromLambda(SyntaxNode expression)
+        private string? ExtractPropertyNameFromLambda(SyntaxNode expression)
         {
             // Handle lambda expressions like: dest => dest.PropertyName
             if (expression is SimpleLambdaExpressionSyntax lambda &&
@@ -321,18 +321,17 @@ namespace ZeroReflection.MapperGenerator.Analysis
             return null;
         }
 
-        private string ExtractPropertyNameFromArgument(SyntaxNode expression)
+        private string? ExtractPropertyNameFromArgument(SyntaxNode expression)
         {
             // Handle lambda expressions: dest => dest.PropertyName
-            string lambdaProperty = ExtractPropertyNameFromLambda(expression);
+            string? lambdaProperty = ExtractPropertyNameFromLambda(expression);
             if (!string.IsNullOrEmpty(lambdaProperty))
                 return lambdaProperty;
             
             // Handle string literals: "PropertyName"
-            if (expression is LiteralExpressionSyntax literal &&
-                literal.Token.ValueText is string stringValue)
+            if (expression is LiteralExpressionSyntax literal)
             {
-                return stringValue;
+                return literal.Token.ValueText;
             }
             
             return null;
@@ -365,11 +364,14 @@ namespace ZeroReflection.MapperGenerator.Analysis
                 var srcTypeSymbol = ModelExtensions.GetTypeInfo(semanticModel, srcTypeSyntax).Type as INamedTypeSymbol;
                 var dstTypeSymbol = ModelExtensions.GetTypeInfo(semanticModel, dstTypeSyntax).Type as INamedTypeSymbol;
 
+                if (srcTypeSymbol == null || dstTypeSymbol == null)
+                    return false;
+
                 typeInfo = (
-                    srcTypeSymbol?.Name ?? srcTypeSyntax.ToString(),
-                    dstTypeSymbol?.Name ?? dstTypeSyntax.ToString(),
-                    srcTypeSymbol?.ContainingNamespace?.ToString() ?? "",
-                    dstTypeSymbol?.ContainingNamespace?.ToString() ?? "",
+                    srcTypeSymbol.Name,
+                    dstTypeSymbol.Name,
+                    srcTypeSymbol.ContainingNamespace?.ToString() ?? "",
+                    dstTypeSymbol.ContainingNamespace?.ToString() ?? "",
                     srcTypeSymbol,
                     dstTypeSymbol
                 );
@@ -404,13 +406,10 @@ namespace ZeroReflection.MapperGenerator.Analysis
                 if (mappingSet.Add((sourceTypeName, destTypeName)))
                 {
                     var mapping = CreateMappingInfoForNestedTypes(sourceType, destType);
-                    if (mapping != null)
-                    {
-                        mappings.Add(mapping);
-                        
-                        // Check if this mapping introduces new nested types
-                        DiscoverNestedMappings(mapping);
-                    }
+                    mappings.Add(mapping);
+                    
+                    // Check if this mapping introduces new nested types
+                    DiscoverNestedMappings(mapping);
                 }
             }
         }
@@ -439,12 +438,12 @@ namespace ZeroReflection.MapperGenerator.Analysis
                     // Find the source and destination types for this nested mapping
                     var sourceType = FindTypeByName(prop.SourceType);
                     var destType = FindTypeByName(prop.Type);
-                    
+
                     if (sourceType != null && destType != null)
                     {
                         var sourceTypeName = sourceType.Name;
                         var destTypeName = destType.Name;
-                        
+
                         if (!_processedMappings.Contains((sourceTypeName, destTypeName)))
                         {
                             _pendingMappings.Enqueue((sourceType, destType));
@@ -454,24 +453,28 @@ namespace ZeroReflection.MapperGenerator.Analysis
                 else if (prop.MappingType == MappingType.CollectionDeep)
                 {
                     // Find the element types for collection mapping
-                    var sourceElementType = FindTypeByName(prop.SourceCollectionElementType);
-                    var destElementType = FindTypeByName(prop.CollectionElementType);
-                    
-                    if (sourceElementType != null && destElementType != null)
+                    if (!string.IsNullOrEmpty(prop.SourceCollectionElementType) &&
+                        !string.IsNullOrEmpty(prop.CollectionElementType))
                     {
-                        var sourceTypeName = sourceElementType.Name;
-                        var destTypeName = destElementType.Name;
-                        
-                        if (!_processedMappings.Contains((sourceTypeName, destTypeName)))
+                        var sourceElementType = FindTypeByName(prop.SourceCollectionElementType);
+                        var destElementType = FindTypeByName(prop.CollectionElementType);
+
+                        if (sourceElementType != null && destElementType != null)
                         {
-                            _pendingMappings.Enqueue((sourceElementType, destElementType));
+                            var sourceTypeName = sourceElementType.Name;
+                            var destTypeName = destElementType.Name;
+
+                            if (!_processedMappings.Contains((sourceTypeName, destTypeName)))
+                            {
+                                _pendingMappings.Enqueue((sourceElementType, destElementType));
+                            }
                         }
                     }
                 }
             }
         }
 
-        private INamedTypeSymbol FindTypeByName(string typeName)
+        private INamedTypeSymbol? FindTypeByName(string typeName)
         {
             if (string.IsNullOrEmpty(typeName))
                 return null;
@@ -517,7 +520,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
             return mapping;
         }
 
-        private void ProcessReverseCalls(MethodDeclarationSyntax method, HashSet<(string, string)> mappingSet, HashSet<(string, string)> reverseSet)
+        private void ProcessReverseCalls(MethodDeclarationSyntax method, HashSet<(string, string)> reverseSet)
         {
             var reverseCalls = method.DescendantNodes()
                 .OfType<InvocationExpressionSyntax>()
@@ -550,12 +553,6 @@ namespace ZeroReflection.MapperGenerator.Analysis
             return false;
         }
 
-        private void ProcessReverseMappings(GeneratorExecutionContext context, List<MappingInfo> mappings, 
-            HashSet<(string, string)> mappingSet, HashSet<(string, string)> reverseSet)
-        {
-            // legacy path delegates to new implementation
-            ProcessReverseMappingsForCompilation(context.Compilation, mappings, mappingSet, reverseSet);
-        }
 
         private void ProcessReverseMappingsForCompilation(Compilation compilation, List<MappingInfo> mappings,
             HashSet<(string, string)> mappingSet, HashSet<(string, string)> reverseSet)
@@ -572,10 +569,10 @@ namespace ZeroReflection.MapperGenerator.Analysis
                     }
                 }
             }
-            CreateReverseNestedMappings(mappings, mappingSet);
+            CreateReverseNestedMappings(mappings);
         }
 
-        private void CreateReverseNestedMappings(List<MappingInfo> mappings, HashSet<(string, string)> mappingSet)
+        private void CreateReverseNestedMappings(List<MappingInfo> mappings)
         {
             // Create a list of mappings that need reverse nested mappings
             var mappingsToProcess = mappings.ToList();
@@ -603,6 +600,9 @@ namespace ZeroReflection.MapperGenerator.Analysis
                     }
                     else if (prop.MappingType == MappingType.CollectionDeep)
                     {
+                        if (string.IsNullOrEmpty(prop.SourceCollectionElementType) || string.IsNullOrEmpty(prop.CollectionElementType))
+                            continue;
+                            
                         var sourceElementTypeName = ExtractTypeName(prop.SourceCollectionElementType);
                         var destElementTypeName = ExtractTypeName(prop.CollectionElementType);
                         
@@ -622,21 +622,16 @@ namespace ZeroReflection.MapperGenerator.Analysis
             }
         }
 
-        private MappingInfo CreateReverseMappingInfo(GeneratorExecutionContext context, List<MappingInfo> mappings, 
-            string srcType, string dstType)
-        {
-            return CreateReverseMappingInfo(context.Compilation, mappings, srcType, dstType);
-        }
 
-        private MappingInfo CreateReverseMappingInfo(Compilation compilation, List<MappingInfo> mappings,
+        private MappingInfo? CreateReverseMappingInfo(Compilation compilation, List<MappingInfo> mappings,
             string srcType, string dstType)
         {
             var original = mappings.FirstOrDefault(m => m.Source == srcType && m.Destination == dstType);
             if (original == null) return null;
             var srcNamespace = original.DestinationNamespace;
             var dstNamespace = original.SourceNamespace;
-            var srcTypeSymbol = compilation.GetTypeByMetadataName(!string.IsNullOrEmpty(srcNamespace) ? $"{srcNamespace}.{dstType}" : dstType) as INamedTypeSymbol;
-            var dstTypeSymbol = compilation.GetTypeByMetadataName(!string.IsNullOrEmpty(dstNamespace) ? $"{dstNamespace}.{srcType}" : srcType) as INamedTypeSymbol;
+            var srcTypeSymbol = compilation.GetTypeByMetadataName(!string.IsNullOrEmpty(srcNamespace) ? $"{srcNamespace}.{dstType}" : dstType);
+            var dstTypeSymbol = compilation.GetTypeByMetadataName(!string.IsNullOrEmpty(dstNamespace) ? $"{dstNamespace}.{srcType}" : srcType);
             if (srcTypeSymbol == null || dstTypeSymbol == null) return null;
             var propertyMatcher = new PropertyMatcher();
             var properties = propertyMatcher.MatchProperties(srcTypeSymbol, dstTypeSymbol);
@@ -675,7 +670,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
                 
                 foreach (var attr in customPropertyAttrs)
                 {
-                    ProcessCustomPropertyMappingAttribute(attr, method, semanticModel, mappings);
+                    ProcessCustomPropertyMappingAttribute(attr, method, mappings);
                 }
             }
         }
@@ -723,7 +718,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
             }
         }
 
-        private INamedTypeSymbol GetTypeSymbolFromTypeof(SyntaxNode expression, SemanticModel semanticModel)
+        private INamedTypeSymbol? GetTypeSymbolFromTypeof(SyntaxNode expression, SemanticModel semanticModel)
         {
             // Handle typeof(TypeName) expressions
             if (expression is TypeOfExpressionSyntax typeofExpr)
@@ -734,7 +729,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
         }
 
         private void ProcessCustomPropertyMappingAttribute(AttributeSyntax attribute, MethodDeclarationSyntax method, 
-            SemanticModel semanticModel, List<MappingInfo> mappings)
+            List<MappingInfo> mappings)
         {
             if (attribute.ArgumentList?.Arguments.Count >= 3)
             {
@@ -754,7 +749,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
                     {
                         // For custom property mappings, we need to inline the logic rather than call the method
                         // Since we can't access the profile instance in static context
-                        var customExpression = GenerateInlineExpressionForCustomProperty(method, propertyName, sourceType);
+                        var customExpression = GenerateInlineExpressionForCustomProperty(method);
                         
                         // Add custom property mapping to existing mapping
                         var customProperty = new PropertyMapping
@@ -777,7 +772,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
             }
         }
 
-        private string GenerateInlineExpressionForCustomProperty(MethodDeclarationSyntax method, string propertyName, string sourceType)
+        private string GenerateInlineExpressionForCustomProperty(MethodDeclarationSyntax method)
         {
             // Generate inline expressions for common custom property mapping patterns
             var methodName = method.Identifier.ValueText;
@@ -813,9 +808,9 @@ namespace ZeroReflection.MapperGenerator.Analysis
         private string ExtractStringLiteral(SyntaxNode expression)
         {
             // Handle string literals like "PropertyName"
-            if (expression is LiteralExpressionSyntax literal && literal.Token.ValueText is string stringValue)
+            if (expression is LiteralExpressionSyntax literal)
             {
-                return stringValue;
+                return literal.Token.ValueText;
             }
             return "";
         }

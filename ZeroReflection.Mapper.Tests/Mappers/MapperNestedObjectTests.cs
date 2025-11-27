@@ -10,6 +10,9 @@ public class UserProfile : MapperProfile
     public override void Configure(MapperConfiguration config)
     {
         config.CreateMap<UserModel, UserEntity>().Reverse();
+        config.CreateMap<AddressModel, AddressEntity>().Reverse();
+        config.CreateMap<ProductModel, ProductEntity>().Reverse();
+        config.CreateMap<ProductTag, ProductTagEntity>().Reverse();
     }
 }
 
@@ -30,7 +33,7 @@ public class MapperNestedObjectTests
     public void Should_Map_User_With_Nested_Address()
     {
         // Arrange
-        var UserModel = new UserModel
+        var userModel = new UserModel
         {
             Name = "John Doe",
             Age = 30,
@@ -42,22 +45,22 @@ public class MapperNestedObjectTests
         };
 
         // Act
-        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(UserModel);
+        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(userModel);
 
         // Assert
         Assert.NotNull(userEntity);
-        Assert.Equal(UserModel.Name, userEntity.Name);
-        Assert.Equal(UserModel.Age, userEntity.Age);
+        Assert.Equal(userModel.Name, userEntity.Name);
+        Assert.Equal(userModel.Age, userEntity.Age);
         Assert.NotNull(userEntity.Addresses);
-        Assert.Equal(UserModel.Addresses.Street, userEntity.Addresses.Street);
-        Assert.Equal(UserModel.Addresses.City, userEntity.Addresses.City);
+        Assert.Equal(userModel.Addresses.Street, userEntity.Addresses.Street);
+        Assert.Equal(userModel.Addresses.City, userEntity.Addresses.City);
     }
 
     [Fact]
     public void Should_Map_User_With_Product_Collection()
     {
         // Arrange
-        var UserModel = new UserModel
+        var userModel = new UserModel
         {
             Name = "Jane Smith",
             Age = 25,
@@ -70,19 +73,19 @@ public class MapperNestedObjectTests
         };
 
         // Act
-        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(UserModel);
+        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(userModel);
 
         // Assert
         Assert.NotNull(userEntity);
-        Assert.Equal(UserModel.Name, userEntity.Name);
-        Assert.Equal(UserModel.Age, userEntity.Age);
+        Assert.Equal(userModel.Name, userEntity.Name);
+        Assert.Equal(userModel.Age, userEntity.Age);
         Assert.NotNull(userEntity.Products);
         Assert.Equal(3, userEntity.Products.Count);
 
-        for (int i = 0; i < UserModel.Products.Count; i++)
+        for (int i = 0; i < userModel.Products.Count; i++)
         {
-            Assert.Equal(UserModel.Products[i].ProductName, userEntity.Products[i].ProductName);
-            Assert.Equal(UserModel.Products[i].Price, userEntity.Products[i].Price);
+            Assert.Equal(userModel.Products[i].ProductName, userEntity.Products[i].ProductName);
+            Assert.Equal(userModel.Products[i].Price, userEntity.Products[i].Price);
         }
     }
 
@@ -90,7 +93,7 @@ public class MapperNestedObjectTests
     public void Should_Map_Complex_User_With_All_Nested_Objects()
     {
         // Arrange
-        var UserModel = new UserModel
+        var userModel = new UserModel
         {
             Name = "Bob Johnson",
             Age = 35,
@@ -107,17 +110,17 @@ public class MapperNestedObjectTests
         };
 
         // Act
-        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(UserModel);
+        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(userModel);
 
         // Assert
         Assert.NotNull(userEntity);
-        Assert.Equal(UserModel.Name, userEntity.Name);
-        Assert.Equal(UserModel.Age, userEntity.Age);
+        Assert.Equal(userModel.Name, userEntity.Name);
+        Assert.Equal(userModel.Age, userEntity.Age);
 
         // Verify nested address
         Assert.NotNull(userEntity.Addresses);
-        Assert.Equal(UserModel.Addresses.Street, userEntity.Addresses.Street);
-        Assert.Equal(UserModel.Addresses.City, userEntity.Addresses.City);
+        Assert.Equal(userModel.Addresses.Street, userEntity.Addresses.Street);
+        Assert.Equal(userModel.Addresses.City, userEntity.Addresses.City);
 
         // Verify product collection
         Assert.NotNull(userEntity.Products);
@@ -148,40 +151,40 @@ public class MapperNestedObjectTests
         };
 
         // Act
-        var UserModel = _mapper.MapSingleObject<UserEntity, UserModel>(userEntity);
+        var userModel = _mapper.MapSingleObject<UserEntity, UserModel>(userEntity);
 
         // Assert
-        Assert.NotNull(UserModel);
-        Assert.Equal(userEntity.Name, UserModel.Name);
-        Assert.Equal(userEntity.Age, UserModel.Age);
-        Assert.NotNull(UserModel.Addresses);
-        Assert.Equal(userEntity.Addresses.Street, UserModel.Addresses.Street);
-        Assert.Equal(userEntity.Addresses.City, UserModel.Addresses.City);
-        Assert.NotNull(UserModel.Products);
-        Assert.Single(UserModel.Products);
-        Assert.Equal("Tablet", UserModel.Products[0].ProductName);
-        Assert.Equal(299.99m, UserModel.Products[0].Price);
+        Assert.NotNull(userModel);
+        Assert.Equal(userEntity.Name, userModel.Name);
+        Assert.Equal(userEntity.Age, userModel.Age);
+        Assert.NotNull(userModel.Addresses);
+        Assert.Equal(userEntity.Addresses.Street, userModel.Addresses.Street);
+        Assert.Equal(userEntity.Addresses.City, userModel.Addresses.City);
+        Assert.NotNull(userModel.Products);
+        Assert.Single(userModel.Products);
+        Assert.Equal("Tablet", userModel.Products[0].ProductName);
+        Assert.Equal(299.99m, userModel.Products[0].Price);
     }
 
     [Fact]
     public void Should_Handle_Null_Nested_Objects()
     {
         // Arrange
-        var UserModel = new UserModel
+        var userModel = new UserModel
         {
             Name = "Test User",
             Age = 20,
-            Addresses = null,
-            Products = null
+            Addresses = null!,
+            Products = null!
         };
 
         // Act
-        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(UserModel);
+        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(userModel);
 
         // Assert
         Assert.NotNull(userEntity);
-        Assert.Equal(UserModel.Name, userEntity.Name);
-        Assert.Equal(UserModel.Age, userEntity.Age);
+        Assert.Equal(userModel.Name, userEntity.Name);
+        Assert.Equal(userModel.Age, userEntity.Age);
         Assert.Null(userEntity.Addresses);
         Assert.Null(userEntity.Products);
     }
@@ -190,7 +193,7 @@ public class MapperNestedObjectTests
     public void Should_Handle_Empty_Product_Collection()
     {
         // Arrange
-        var UserModel = new UserModel
+        var userModel = new UserModel
         {
             Name = "Empty User",
             Age = 22,
@@ -198,12 +201,12 @@ public class MapperNestedObjectTests
         };
 
         // Act
-        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(UserModel);
+        var userEntity = _mapper.MapSingleObject<UserModel, UserEntity>(userModel);
 
         // Assert
         Assert.NotNull(userEntity);
-        Assert.Equal(UserModel.Name, userEntity.Name);
-        Assert.Equal(UserModel.Age, userEntity.Age);
+        Assert.Equal(userModel.Name, userEntity.Name);
+        Assert.Equal(userModel.Age, userEntity.Age);
         Assert.NotNull(userEntity.Products);
         Assert.Empty(userEntity.Products);
     }
@@ -212,7 +215,7 @@ public class MapperNestedObjectTests
     public void Should_Map_Collection_Of_Users_With_Nested_Objects()
     {
         // Arrange
-        var UserModels = new List<UserModel>
+        var userModels = new List<UserModel>
         {
             new()
             {
@@ -238,7 +241,7 @@ public class MapperNestedObjectTests
         };
 
         // Act
-        var userEntities = _mapper.Map<List<UserEntity>>(UserModels);
+        var userEntities = _mapper.Map<List<UserEntity>>(userModels);
 
         // Assert
         Assert.NotNull(userEntities);
@@ -266,45 +269,45 @@ public class MapperNestedObjectTests
     public void Should_Map_Individual_Address()
     {
         // Arrange
-        var AddressModel = new AddressModel
+        var addressModel = new AddressModel
         {
             Street = "123 Test Street",
             City = "Test City"
         };
 
         // Act
-        var addressEntity = _mapper.MapSingleObject<AddressModel, AddressEntity>(AddressModel);
+        var addressEntity = _mapper.MapSingleObject<AddressModel, AddressEntity>(addressModel);
 
         // Assert
         Assert.NotNull(addressEntity);
-        Assert.Equal(AddressModel.Street, addressEntity.Street);
-        Assert.Equal(AddressModel.City, addressEntity.City);
+        Assert.Equal(addressModel.Street, addressEntity.Street);
+        Assert.Equal(addressModel.City, addressEntity.City);
     }
 
     [Fact]
     public void Should_Map_Individual_Product()
     {
         // Arrange
-        var ProductModel = new ProductModel
+        var productModel = new ProductModel
         {
             ProductName = "Test Product",
             Price = 49.99m
         };
 
         // Act
-        var productEntity = _mapper.MapSingleObject<ProductModel, ProductEntity>(ProductModel);
+        var productEntity = _mapper.MapSingleObject<ProductModel, ProductEntity>(productModel);
 
         // Assert
         Assert.NotNull(productEntity);
-        Assert.Equal(ProductModel.ProductName, productEntity.ProductName);
-        Assert.Equal(ProductModel.Price, productEntity.Price);
+        Assert.Equal(productModel.ProductName, productEntity.ProductName);
+        Assert.Equal(productModel.Price, productEntity.Price);
     }
 
     [Fact]
     public void Should_Map_Product_Collection_Separately()
     {
         // Arrange
-        var ProductModels = new List<ProductModel>
+        var productModels = new List<ProductModel>
         {
             new() { ProductName = "Product A", Price = 10.99m },
             new() { ProductName = "Product B", Price = 20.99m },
@@ -312,16 +315,16 @@ public class MapperNestedObjectTests
         };
 
         // Act
-        var productEntities = _mapper.Map<List<ProductEntity>>(ProductModels);
+        var productEntities = _mapper.Map<List<ProductEntity>>(productModels);
 
         // Assert
         Assert.NotNull(productEntities);
         Assert.Equal(3, productEntities.Count);
 
-        for (int i = 0; i < ProductModels.Count; i++)
+        for (int i = 0; i < productModels.Count; i++)
         {
-            Assert.Equal(ProductModels[i].ProductName, productEntities[i].ProductName);
-            Assert.Equal(ProductModels[i].Price, productEntities[i].Price);
+            Assert.Equal(productModels[i].ProductName, productEntities[i].ProductName);
+            Assert.Equal(productModels[i].Price, productEntities[i].Price);
         }
     }
 
@@ -517,7 +520,7 @@ public class MapperNestedObjectTests
         {
             ProductName = "Basic Product",
             Price = 9.99m,
-            ProductTags = null // Null collection
+            ProductTags = null! // Null collection
         };
 
         // Act

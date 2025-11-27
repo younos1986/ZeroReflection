@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using Microsoft.Extensions.DependencyInjection;
 using ZeroReflection.Mapper.Generated;
@@ -19,10 +19,9 @@ namespace ZeroReflection.Benchmarks;
 public class MappingBenchmarksCustomMapper
 {
     private IMapper _myMapper = default!;
-    private BalanceEntity _singleBalance = default!;
     
-    private AutoMapper.IMapper _mapper;
-    private static BalanceEntity BalanceSample = new()
+    private AutoMapper.IMapper _mapper = default!;
+    private static BalanceEntity _balanceSample = new()
     {
          Id = Guid.NewGuid().ToString(),
          UserId = Guid.NewGuid().ToString(),
@@ -57,7 +56,7 @@ public class MappingBenchmarksCustomMapper
         var services = new ServiceCollection();
         services.RegisterZeroReflectionMapping();
         services.AddLogging();
-        services.AddAutoMapper(cfg => { },
+        services.AddAutoMapper(_ => { },
             typeof(BalanceEntity).Assembly);
         
         var sp = services.BuildServiceProvider();
@@ -69,21 +68,21 @@ public class MappingBenchmarksCustomMapper
     [BenchmarkCategory("Single")]
     public BalanceModel ZeroReflection()
     {
-        return _myMapper.MapSingleObject<BalanceEntity ,BalanceModel>(BalanceSample);
+        return _myMapper.MapSingleObject<BalanceEntity ,BalanceModel>(_balanceSample);
     }
     
     [Benchmark]
     [BenchmarkCategory("Single")]
     public BalanceModel Mapster()
     {
-        return BalanceSample.Adapt<BalanceModel>();
+        return _balanceSample.Adapt<BalanceModel>();
     }
     
     [Benchmark]
     [BenchmarkCategory("Single")]
     public BalanceModel AutoMapper()
     {
-        return _mapper.Map<BalanceModel>(BalanceSample);
+        return _mapper.Map<BalanceModel>(_balanceSample);
     }
     
     //***********************************************************************************

@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using ZeroReflection.Mapper;
 using ZeroReflection.Mapper.Generated;
 using ZeroReflection.Mapper.Tests.Models.Entities;
 using ZeroReflection.Mapper.Tests.Models.DTOs;
-using System.Linq;
 
 namespace ZeroReflection.Mapper.Tests.CustomMappers;
 
@@ -127,12 +125,15 @@ public class OrderModelTests
     public void Should_Handle_Order_Status_Custom_Property_Mapping()
     {
         // Arrange - Cancelled order
+        var customer = new CustomTestUser { Id = 1, FirstName = "Test", LastName = "User" };
+        
         var cancelledOrder = new CustomTestOrder
         {
             Id = 789,
             IsCompleted = false,
             IsCancelled = true,
-            Items = new List<CustomTestOrderItem>()
+            Items = new List<CustomTestOrderItem>(),
+            Customer = customer
         };
 
         // Act
@@ -147,7 +148,8 @@ public class OrderModelTests
             Id = 790,
             IsCompleted = false,
             IsCancelled = false,
-            Items = new List<CustomTestOrderItem>()
+            Items = new List<CustomTestOrderItem>(),
+            Customer = customer
         };
 
         // Act
@@ -161,13 +163,20 @@ public class OrderModelTests
     public void Should_Handle_Null_Values_In_Custom_Mappings()
     {
         // Arrange
+        var customer = new CustomTestUser
+        {
+            Id = 0,
+            FirstName = "",
+            LastName = ""
+        };
+
         var order = new CustomTestOrder
         {
             Id = 999,
             IsCompleted = false,
             IsCancelled = false,
             Items = null, // null items
-            Customer = null // null customer
+            Customer = customer
         };
 
         // Act
@@ -179,7 +188,7 @@ public class OrderModelTests
         Assert.Equal("ORD-000999", orderDto.OrderNumber);
         Assert.Equal("Pending", orderDto.Status);
         Assert.Equal(0m, orderDto.TotalAmount); // Should handle null items gracefully
-        Assert.Equal(string.Empty, orderDto.CustomerName.Trim()); // Should handle null customer gracefully
+        Assert.Equal(string.Empty, orderDto.CustomerName.Trim()); // Should handle empty customer name gracefully
         //Assert.Empty(orderDto.Items); // Should return empty list instead of null
     }
 
@@ -187,6 +196,7 @@ public class OrderModelTests
     public void Should_Calculate_Order_Total_Correctly()
     {
         // Arrange
+        var customer = new CustomTestUser { Id = 1, FirstName = "Test", LastName = "User" };
         var product1 = new CustomTestProduct { Id = 1, Name = "Product1", Price = 100m };
         var product2 = new CustomTestProduct { Id = 2, Name = "Product2", Price = 50m };
 
@@ -195,6 +205,7 @@ public class OrderModelTests
             Id = 123,
             IsCompleted = false,
             IsCancelled = false,
+            Customer = customer,
             Items = new List<CustomTestOrderItem>
             {
                 new() { Product = product1, Quantity = 3, Price = 100m },

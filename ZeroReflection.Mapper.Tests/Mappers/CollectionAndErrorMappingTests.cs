@@ -105,7 +105,7 @@ public class CollectionAndErrorMappingTests
         TestModel? model = null;
 
         // Act
-        var entity = _mapper.MapSingleObject<TestModel, TestEntity>(model);
+        var entity = _mapper.MapSingleObject<TestModel, TestEntity>(model!);
 
         // Assert
         Assert.Null(entity);

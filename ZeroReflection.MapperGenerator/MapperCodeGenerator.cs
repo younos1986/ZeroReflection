@@ -22,13 +22,12 @@ namespace ZeroReflection.MapperGenerator
             var uniqueMappings = CodeGenUtils.GetUniquePairs(mappings);
             foreach (var (source, destination) in uniqueMappings)
             {
-                var mapping = mappings.FirstOrDefault(m => m.Source == source && m.Destination == destination);
+                MappingInfo? mapping = mappings.FirstOrDefault(m => m.Source == source && m.Destination == destination);
                 var handlerSource = MappingHandlerEmitter.Build(source, destination, mapping, mappings);
                 spc.AddSource($"Map{source}To{destination}.g.cs", Microsoft.CodeAnalysis.Text.SourceText.From(handlerSource, System.Text.Encoding.UTF8));
             }
 
-            // Dispatcher - decide using configuration flag; fall back to simple chain if mixed
-            bool useSwitch = mappings.Any() && mappings.First().UseSwitchDispatcher;
+            // Dispatcher
             spc.AddSource("GeneratedMappingDispatcher.g.cs", Microsoft.CodeAnalysis.Text.SourceText.From(DispatcherEmitter.Build(mappings), System.Text.Encoding.UTF8));
         }
     }

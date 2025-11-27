@@ -1,5 +1,6 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace ZeroReflection.Mapper
@@ -51,7 +52,7 @@ namespace ZeroReflection.Mapper
             return _customMappings.ContainsKey((typeof(TSource), typeof(TDestination)));
         }
 
-        public Func<TSource, TDestination> GetCustomMapping<TSource, TDestination>()
+        public Func<TSource, TDestination>? GetCustomMapping<TSource, TDestination>()
         {
             if (_customMappings.TryGetValue((typeof(TSource), typeof(TDestination)), out var mapping))
             {
@@ -66,7 +67,7 @@ namespace ZeroReflection.Mapper
             return _customPropertyMappings.ContainsKey((typeof(TSource), typeof(TDestination), propertyName));
         }
 
-        public Func<TSource, TProperty> GetCustomPropertyMapping<TSource, TDestination, TProperty>(string propertyName)
+        public Func<TSource, TProperty>? GetCustomPropertyMapping<TSource, TDestination, TProperty>(string propertyName)
         {
             if (_customPropertyMappings.TryGetValue((typeof(TSource), typeof(TDestination), propertyName),
                     out var mapping))
@@ -89,7 +90,7 @@ namespace ZeroReflection.Mapper
         {
             private readonly MapperConfiguration _config;
             // Tracks if any custom mapping, member mapping, or ignore rule has been configured
-            private bool _hasCustomMappingOrMemberConfig = false;
+            private bool _hasCustomMappingOrMemberConfig;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="MappingBuilder{TSource, TDestination}"/> class.
@@ -207,8 +208,18 @@ namespace ZeroReflection.Mapper
             }
         }
 
-        public bool EnableProjectionFunctions { get; set; } = false;
+        // These properties are part of the public API and are read by the source generator
+        // via syntax/semantic analysis at compile time
+        [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+        public bool EnableProjectionFunctions { get; set; }
+        
+        [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
         public bool UseSwitchDispatcher { get; set; } = true;
-        public bool ThrowIfPropertyMissing { get; set; } = false;
+        
+        [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+        public bool ThrowIfPropertyMissing { get; set; }
     }
 }

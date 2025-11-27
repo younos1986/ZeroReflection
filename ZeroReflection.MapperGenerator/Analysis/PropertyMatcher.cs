@@ -10,9 +10,6 @@ namespace ZeroReflection.MapperGenerator.Analysis
     {
         public List<PropertyMapping> MatchProperties(INamedTypeSymbol sourceType, INamedTypeSymbol destinationType)
         {
-            if (sourceType == null || destinationType == null)
-                return new List<PropertyMapping>();
-
             var sourceProps = sourceType.GetAllPublicProperties();
             var destinationProps = destinationType.GetAllPublicProperties();
             var propertyMappings = new List<PropertyMapping>();
@@ -81,7 +78,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
 
             // Check if there's a MapTo attribute pointing to a non-existent or incompatible source
             var mapToAttr = destinationProperty.GetMapToAttribute();
-            if (mapToAttr != null)
+            if (mapToAttr is not null)
             {
                 var sourceName = mapToAttr.ConstructorArguments[0].Value?.ToString();
                 var sourceProperty = sourceProperties.FirstOrDefault(p => p.Name == sourceName);
@@ -97,7 +94,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
 
             // Check if there's a source property with MapTo pointing to this destination but incompatible type
             var sourceWithMapTo = sourceProperties.FirstOrDefault(p => 
-                p.GetMapToAttribute()?.ConstructorArguments[0].Value?.ToString() == destinationProperty.Name);
+                p.GetMapToAttribute() is { } attr && attr.ConstructorArguments[0].Value?.ToString() == destinationProperty.Name);
             if (sourceWithMapTo != null && !AreTypesCompatible(sourceWithMapTo.Type, destinationProperty.Type))
             {
                 return $"Source property '{sourceWithMapTo.Name}' maps to this destination but has incompatible type '{sourceWithMapTo.Type}'";
@@ -107,11 +104,11 @@ namespace ZeroReflection.MapperGenerator.Analysis
             return "No matching source property found";
         }
 
-        private IPropertySymbol FindMatchingSourceProperty(IPropertySymbol destinationProperty, List<IPropertySymbol> sourceProperties)
+        private IPropertySymbol? FindMatchingSourceProperty(IPropertySymbol destinationProperty, List<IPropertySymbol> sourceProperties)
         {
             // First, check if destination property has MapTo attribute pointing to source
             var mapToAttr = destinationProperty.GetMapToAttribute();
-            if (mapToAttr != null)
+            if (mapToAttr is not null)
             {
                 var sourceName = mapToAttr.ConstructorArguments[0].Value?.ToString();
                 return sourceProperties.FirstOrDefault(p => 
@@ -122,7 +119,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
             // Then check for direct name match or source property with MapTo attribute
             return sourceProperties.FirstOrDefault(p =>
                 (p.Name == destinationProperty.Name && AreTypesCompatible(p.Type, destinationProperty.Type)) ||
-                (p.GetMapToAttribute()?.ConstructorArguments[0].Value?.ToString() == destinationProperty.Name &&
+                (p.GetMapToAttribute() is { } attr && attr.ConstructorArguments[0].Value?.ToString() == destinationProperty.Name &&
                  AreTypesCompatible(p.Type, destinationProperty.Type)));
         }
 
@@ -170,7 +167,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
             }
 
             // Handle nullable value types (int? -> int)
-            if (sourceType.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
+            if (sourceType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
             {
                 if (sourceType is INamedTypeSymbol namedSourceType && namedSourceType.TypeArguments.Length == 1)
                 {
@@ -180,7 +177,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
             }
 
             // Handle non-nullable to nullable value types (int -> int?)
-            if (destinationType.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
+            if (destinationType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
             {
                 if (destinationType is INamedTypeSymbol namedDestType && namedDestType.TypeArguments.Length == 1)
                 {
@@ -208,7 +205,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
             return false;
         }
 
-        private ITypeSymbol GetCollectionElementType(ITypeSymbol type)
+        private ITypeSymbol? GetCollectionElementType(ITypeSymbol type)
         {
             if (type is IArrayTypeSymbol arrayType)
                 return arrayType.ElementType;
@@ -247,12 +244,12 @@ namespace ZeroReflection.MapperGenerator.Analysis
             {
                 Name = destinationProperty.Name,
                 Type = destinationProperty.Type.ToString(),
-                SourcePropertyName = sourcePropertyName,
+                SourcePropertyName = sourcePropertyName ?? destinationProperty.Name,
                 MappingType = mappingType,
                 SourceType = sourceProperty.Type.ToString(),
                 IsCollection = IsCollectionType(destinationProperty.Type),
-                CollectionElementType = GetCollectionElementType(destinationProperty.Type)?.ToString(),
-                SourceCollectionElementType = GetCollectionElementType(sourceProperty.Type)?.ToString()
+                CollectionElementType = GetCollectionElementType(destinationProperty.Type)?.ToString() ?? string.Empty,
+                SourceCollectionElementType = GetCollectionElementType(sourceProperty.Type)?.ToString() ?? string.Empty
             };
         }
 
@@ -268,14 +265,14 @@ namespace ZeroReflection.MapperGenerator.Analysis
             
             // Nullable to non-nullable conversion
             if ((sourceTypeString.EndsWith("?") && !destTypeString.EndsWith("?")) ||
-                (sourceType.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T))
+                (sourceType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T))
             {
                 return MappingType.NullableToNonNullable;
             }
             
             // Non-nullable to nullable conversion
             if ((!sourceTypeString.EndsWith("?") && destTypeString.EndsWith("?")) ||
-                (destinationType.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T))
+                (destinationType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T))
             {
                 return MappingType.NonNullableToNullable;
             }
@@ -289,7 +286,7 @@ namespace ZeroReflection.MapperGenerator.Analysis
                 if (sourceElementType?.ToString() == destElementType?.ToString())
                     return MappingType.CollectionDirect;
                 
-                if (CanBeDeepMapped(sourceElementType, destElementType))
+                if (sourceElementType != null && destElementType != null && CanBeDeepMapped(sourceElementType, destElementType))
                     return MappingType.CollectionDeep;
             }
 
@@ -304,14 +301,16 @@ namespace ZeroReflection.MapperGenerator.Analysis
         {
             // If destination has MapTo attribute, use the specified source name
             var destMapToAttr = destinationProperty.GetMapToAttribute();
-            if (destMapToAttr != null)
+            if (destMapToAttr is not null)
             {
-                return destMapToAttr.ConstructorArguments[0].Value?.ToString();
+                var sourceName = destMapToAttr.ConstructorArguments[0].Value?.ToString();
+                if (sourceName != null)
+                    return sourceName;
             }
 
             // If source has MapTo attribute pointing to destination, use source name
             var srcMapToAttr = sourceProperty.GetMapToAttribute();
-            if (srcMapToAttr?.ConstructorArguments[0].Value?.ToString() == destinationProperty.Name)
+            if (srcMapToAttr is { } attr && attr.ConstructorArguments[0].Value?.ToString() == destinationProperty.Name)
             {
                 return sourceProperty.Name;
             }

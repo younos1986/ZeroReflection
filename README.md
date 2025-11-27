@@ -1,26 +1,112 @@
-﻿# ZeroReflection.Mapper
+﻿# ZeroReflection
 
-ZeroReflection.Mapper is a .NET source generator for object mapping. It enables fast, compile-time mapping between different object types, reducing boilerplate and improving performance.
+**ZeroReflection** is a collection of high-performance .NET source generators that eliminate runtime reflection for common patterns. The solution provides two main libraries:
 
-## Features
-- Attribute-based mapping configuration
-- Custom mapping profiles
-- Ignore properties with attributes
-- Optional LINQ projection expressions (compile-time generated)
-- Fast dispatcher for arrays/lists/single objects (if/else or switch jump-table)
-- Source generator for high performance
+- **ZeroReflection.Mapper** - Compile-time object mapping
+- **ZeroReflection.Mediator** - Compile-time mediator pattern implementation
 
-## Getting Started
-Add the NuGet package to your project:
+All packages are **AOT-compatible** with zero runtime reflection, making them perfect for high-performance applications and NativeAOT scenarios.
 
-```
+## 📦 NuGet Packages
+
+### Mapper
+- **[ZeroReflection.Mapper](https://www.nuget.org/packages/ZeroReflection.Mapper)** - Runtime library for object mapping
+- **[ZeroReflection.MapperGenerator](https://www.nuget.org/packages/ZeroReflection.MapperGenerator)** - Source generator for mapping code
+
+### Mediator  
+- **[ZeroReflection.Mediator](https://www.nuget.org/packages/ZeroReflection.Mediator)** - Runtime library for mediator pattern
+- **[ZeroReflection.MediatorGenerator](https://www.nuget.org/packages/ZeroReflection.MediatorGenerator)** - Source generator for mediator dispatch
+
+## 🚀 Quick Start
+
+### ZeroReflection.Mapper
+
+Install the packages:
+```bash
 dotnet add package ZeroReflection.Mapper
+dotnet add package ZeroReflection.MapperGenerator
 ```
 
-Annotate your classes with mapping attributes and implement mapping profiles as needed. See the [documentation](https://ZeroReflection.example.com) for details.
+Define mappings in a profile:
+```csharp
+public class MyMapperProfile : MapperProfile
+{
+    public override void Configure(MapperConfiguration config)
+    {
+        config.CreateMap<PersonModel, PersonEntity>().Reverse();
+    }
+}
+```
+
+### ZeroReflection.Mediator
+
+Install the packages:
+```bash
+dotnet add package ZeroReflection.Mediator
+dotnet add package ZeroReflection.MediatorGenerator
+```
+
+Define requests and handlers:
+```csharp
+public class PingCommand : IRequest<string>
+{
+    public string Message { get; set; }
+}
+
+public class PingCommandHandler : IRequestHandler<PingCommand, string>
+{
+    public Task<string> Handle(PingCommand request, CancellationToken ct)
+    {
+        return Task.FromResult($"Pong: {request.Message}");
+    }
+}
+```
+
+## ✨ Key Features
+
+### Common Features
+- ✅ **Zero reflection** - All dispatch logic generated at compile time
+- ✅ **AOT-compatible** - Full NativeAOT support
+- ✅ **High performance** - Switch-based or if/else dispatchers
+- ✅ **DI integration** - Auto-generated service registration
+- ✅ **netstandard2.0** - Wide compatibility
+
+### Mapper-Specific
+- ✅ Profile-based configuration
+- ✅ Custom property mappings
+- ✅ Collection mapping (List/Array)
+- ✅ Reverse mappings
+- ✅ Property ignoring
+
+### Mediator-Specific
+- ✅ Request/Response pattern
+- ✅ Validation support
+- ✅ Command/Query separation
+- ✅ Unit return type for void commands
 
 
-## Defining a Mapper Profile
+---
+
+## 📘 ZeroReflection.Mapper
+
+### Overview
+ZeroReflection.Mapper is a high-performance .NET source generator for object mapping. It generates compile-time mapping code, eliminating runtime reflection and providing blazing-fast object transformations.
+
+### Installation
+```bash
+dotnet add package ZeroReflection.Mapper
+dotnet add package ZeroReflection.MapperGenerator
+```
+
+### Features
+- Profile-based configuration via `MapperProfile` classes
+- Generated extension methods for fluent mapping syntax
+- Collection mapping (List<T> and T[])
+- Custom property mappings with `.ForMember()`
+- Property ignoring via `.Ignore()` or `[IgnoreMap]` attribute
+- Reverse mappings with `.Reverse()`
+- Switch-based or if/else dispatcher
+- Full NativeAOT support
 A Mapper Profile in ZeroReflection.Mapper allows you to configure how objects are mapped between types. To define a profile:
 
 1. Inherit from `MapperProfile`.
@@ -387,6 +473,20 @@ namespace ZeroReflection.Mapper.Generated
 
 This variant avoids repeated `if` type comparisons and can reduce dispatch overhead when many mappings exist.
 
+## Project Configuration
+
+### Control Code Generation Scope
+
+When you reference the `ZeroReflection.MapperGenerator` package in a project, by default the generator will also run for any project that references that project (transitive reference). To limit code generation to only the project that directly references the generator package, you can disable generation in downstream projects:
+
+```xml
+<PropertyGroup>
+  <EnableZeroReflectionMapperGeneratedCode>false</EnableZeroReflectionMapperGeneratedCode>
+</PropertyGroup>
+```
+
+**Use case:** If Project A references `ZeroReflection.MapperGenerator` and Project B references Project A, both projects would normally generate mapper code. Set `EnableZeroReflectionMapperGeneratedCode=false` in Project B to prevent unwanted code generation there.
+
 ## Configuration flags
 Set these in your `MapperProfile.Configure` method via the provided `MapperConfiguration` instance:
 
@@ -490,3 +590,305 @@ OrderEntity _OrderEntity = new()
 
 
 ![Complex Object Mapping Benchmark](screenshots/MappingBenchmarksOrderEntity_WithSwitch2.png)
+
+---
+
+## 📘 ZeroReflection.Mediator
+
+### Overview
+ZeroReflection.Mediator is a high-performance .NET source generator for implementing the Mediator pattern with zero runtime reflection. It provides compile-time code generation for request handling and validation logic in your applications.
+
+### Installation
+```bash
+dotnet add package ZeroReflection.Mediator
+dotnet add package ZeroReflection.MediatorGenerator
+```
+
+### Features
+- **Request/Response handling** - Send commands and queries with typed responses
+- **Validation support** - Automatic validation before request handling
+- **Zero reflection** - All dispatch logic generated at compile time
+- **Optimized dispatching** - Switch-based jump table or if/else chains
+- **Automatic DI registration** - Generated extension method for service registration
+- **AOT-friendly** - No runtime code generation or reflection
+- **Notification support** - Publish notifications to multiple handlers
+- **Unit return type** - For commands that don't return a value
+
+### Basic Usage
+
+#### 1. Define a Request and Handler
+
+```csharp
+using ZeroReflection.Mediator;
+
+// Request with response
+public class PingCommand : IRequest<string>
+{
+    public string Message { get; set; }
+}
+
+// Handler
+public class PingCommandHandler : IRequestHandler<PingCommand, string>
+{
+    public Task<string> Handle(PingCommand request, CancellationToken cancellationToken)
+    {
+        return Task.FromResult($"Pong: {request.Message}");
+    }
+}
+```
+
+#### 2. Commands Without Response (Using Unit)
+
+For commands that don't return a value, use the `Unit` type:
+
+```csharp
+public class AddProductCommand : IRequest<Unit>
+{
+    public string ProductName { get; set; }
+}
+
+public class AddProductCommandHandler : IRequestHandler<AddProductCommand, Unit>
+{
+    public Task<Unit> Handle(AddProductCommand request, CancellationToken cancellationToken)
+    {
+        // Do something
+        Console.WriteLine($"Added product: {request.ProductName}");
+        return Task.FromResult(Unit.Value);
+    }
+}
+```
+
+#### 3. Add Validation (Optional)
+
+```csharp
+public class PingCommandValidator : IValidator<PingCommand>
+{
+    public void Validate(PingCommand request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Message))
+            throw new ArgumentNullException(nameof(request.Message));
+    }
+}
+```
+
+#### 4. Notifications (One-to-Many)
+
+Publish notifications to multiple handlers:
+
+```csharp
+// Notification
+public class OrderCreatedNotification : INotification
+{
+    public int OrderId { get; set; }
+    public string CustomerEmail { get; set; }
+}
+
+// Handler 1
+public class SendEmailNotificationHandler : INotificationHandler<OrderCreatedNotification>
+{
+    public Task Handle(OrderCreatedNotification notification, CancellationToken cancellationToken)
+    {
+        Console.WriteLine($"Sending email to {notification.CustomerEmail}...");
+        return Task.CompletedTask;
+    }
+}
+
+// Handler 2
+public class UpdateInventoryNotificationHandler : INotificationHandler<OrderCreatedNotification>
+{
+    public Task Handle(OrderCreatedNotification notification, CancellationToken cancellationToken)
+    {
+        Console.WriteLine($"Updating inventory for order {notification.OrderId}...");
+        return Task.CompletedTask;
+    }
+}
+```
+
+### Dependency Injection Registration
+
+The source generator automatically creates a `RegisterZeroReflectionMediatorHandlers()` extension method:
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using ZeroReflection.Mediator;
+
+var services = new ServiceCollection();
+
+// Automatically registers IMediator and all handlers/validators
+services.RegisterZeroReflectionMediatorHandlers();
+
+var serviceProvider = services.BuildServiceProvider();
+```
+
+### Using the Mediator
+
+```csharp
+var mediator = serviceProvider.GetRequiredService<IMediator>();
+
+// Send a request
+var command = new PingCommand { Message = "Hello" };
+var result = await mediator.Send(command);
+// result: "Pong: Hello"
+
+// Publish a notification (calls all registered handlers)
+var notification = new OrderCreatedNotification 
+{ 
+    OrderId = 123, 
+    CustomerEmail = "customer@example.com" 
+};
+await mediator.Publish(notification);
+```
+
+### Configuration
+
+#### Control Code Generation Scope
+
+When you reference the `ZeroReflection.MediatorGenerator` package in a project, by default the generator will also run for any project that references that project (transitive reference). To limit code generation to only the project that directly references the generator package, you can disable generation in downstream projects:
+
+```xml
+<PropertyGroup>
+  <EnableZeroReflectionMediatorGeneratedCode>false</EnableZeroReflectionMediatorGeneratedCode>
+</PropertyGroup>
+```
+
+**Use case:** If Project A references `ZeroReflection.MediatorGenerator` and Project B references Project A, both projects would normally generate mediator code. Set `EnableZeroReflectionMediatorGeneratedCode=false` in Project B to prevent unwanted code generation there.
+
+#### Switch Dispatcher Mode
+
+By default, the generator uses a switch-based dispatcher for optimal performance. To use if/else chains instead:
+
+```xml
+<PropertyGroup>
+  <ZeroReflectionMediatorUseSwitchDispatcher>false</ZeroReflectionMediatorUseSwitchDispatcher>
+</PropertyGroup>
+```
+
+The switch dispatcher uses a dictionary lookup + switch statement for fast type-based dispatch, while if/else mode uses sequential type comparisons.
+
+### How It Works
+
+The source generator:
+1. Scans your project for classes implementing `IRequestHandler<,>`, `IValidator<>`, and `INotificationHandler<>`
+2. Generates a `GeneratedMediatorDispatcher` that handles type-based routing without reflection
+3. Creates a `RegisterZeroReflectionMediatorHandlers()` method that registers all handlers and validators
+4. Generates optimized dispatch code using either switch statements or if/else chains
+
+All dispatching happens at compile time - no reflection or dynamic code generation at runtime.
+
+### What Is Being Generated
+
+The generator produces several types of files:
+
+#### 1. Service Registration Extension
+
+```csharp
+public static class MediatorServiceExtensions
+{
+    public static IServiceCollection RegisterZeroReflectionMediatorHandlers(
+        this IServiceCollection services)
+    {
+        services.AddSingleton<IMediator, Mediator>();
+        services.AddSingleton<IGeneratedMediatorDispatcher, GeneratedMediatorDispatcher>();
+        
+        // Register all request handlers
+        services.AddTransient<IRequestHandler<PingCommand, string>, PingCommandHandler>();
+        services.AddTransient<IRequestHandler<AddProductCommand, Unit>, AddProductCommandHandler>();
+        
+        // Register all validators
+        services.AddTransient<IValidator<PingCommand>, PingCommandValidator>();
+        
+        // Register all notification handlers
+        services.AddTransient<INotificationHandler<OrderCreatedNotification>, SendEmailNotificationHandler>();
+        services.AddTransient<INotificationHandler<OrderCreatedNotification>, UpdateInventoryNotificationHandler>();
+        
+        return services;
+    }
+}
+```
+
+#### 2. Mediator Dispatcher
+
+The dispatcher provides fast, reflection-free request routing:
+
+```csharp
+public sealed class GeneratedMediatorDispatcher : IGeneratedMediatorDispatcher
+{
+    public async Task<TResponse> Send<TRequest, TResponse>(
+        TRequest request,
+        IServiceProvider serviceProvider,
+        CancellationToken cancellationToken)
+        where TRequest : IRequest<TResponse>
+    {
+        // Validate if validator exists
+        var validator = serviceProvider.GetService<IValidator<TRequest>>();
+        validator?.Validate(request);
+        
+        // Get handler and execute
+        var handler = serviceProvider.GetRequiredService<IRequestHandler<TRequest, TResponse>>();
+        return await handler.Handle(request, cancellationToken);
+    }
+    
+    public async Task Publish<TNotification>(
+        TNotification notification,
+        IServiceProvider serviceProvider,
+        CancellationToken cancellationToken)
+        where TNotification : INotification
+    {
+        // Get all handlers for this notification type
+        var handlers = serviceProvider.GetServices<INotificationHandler<TNotification>>();
+        
+        // Execute all handlers in parallel
+        var tasks = handlers.Select(h => h.Handle(notification, cancellationToken));
+        await Task.WhenAll(tasks);
+    }
+}
+```
+
+---
+
+## 🏗️ Repository Structure
+
+```
+ZeroReflection/
+├── ZeroReflection.Mapper/              # Mapper runtime library
+├── ZeroReflection.MapperGenerator/     # Mapper source generator
+├── ZeroReflection.Mediator/            # Mediator runtime library
+├── ZeroReflection.MediatorGenerator/   # Mediator source generator
+├── ZeroReflection.Benchmarks/          # Performance benchmarks
+├── Application/                        # Sample application
+├── AotSample/                          # AOT compatibility sample
+└── Tests/
+    ├── ZeroReflection.Mapper.Tests/
+    └── ZeroReflection.Mediator.Tests/
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## 📄 License
+
+MIT
+
+---
+
+## 🔗 Links
+
+- **NuGet Packages**
+  - [ZeroReflection.Mapper](https://www.nuget.org/packages/ZeroReflection.Mapper)
+  - [ZeroReflection.MapperGenerator](https://www.nuget.org/packages/ZeroReflection.MapperGenerator)
+  - [ZeroReflection.Mediator](https://www.nuget.org/packages/ZeroReflection.Mediator)
+  - [ZeroReflection.MediatorGenerator](https://www.nuget.org/packages/ZeroReflection.MediatorGenerator)
+- **Repository**: [GitHub](https://github.com/younos1986/ZeroReflection)
+- **Author**: Younes Baghaei Moghaddam
+
+---
+
+## 🙏 Acknowledgments
+
+This project was inspired by the need for high-performance, AOT-compatible alternatives to traditional reflection-based libraries like AutoMapper and MediatR.
+

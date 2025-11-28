@@ -6,7 +6,7 @@
         <OutputItemType>Analyzer</OutputItemType>
         <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <VersionPrefix>1.0.3</VersionPrefix>
+        <VersionPrefix>1.0.4</VersionPrefix>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <PackageId>ZeroReflection.MediatorGenerator</PackageId>
         <Authors>Younes Baghaei Moghaddam</Authors>

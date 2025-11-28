@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <VersionPrefix>1.0.3</VersionPrefix>
+        <VersionPrefix>1.0.4</VersionPrefix>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <PackageId>ZeroReflection.Mapper</PackageId>
         <Authors>Younes Baghaei Moghaddam</Authors>

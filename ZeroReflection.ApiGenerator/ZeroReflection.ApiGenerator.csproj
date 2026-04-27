@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+	<Nullable>enable</Nullable>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<VersionPrefix>1.0.4</VersionPrefix>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	<PackageId>ZeroReflection.ApiGenerator</PackageId>
+	<Authors>Younes Baghaei Moghaddam</Authors>
+	<Description>Source generator for API gateway .NET projects.</Description>
+	<PackageTags>api, source-generator, roslyn, lambda, aws</PackageTags>
+	<RepositoryUrl>https://github.com/younos1986/ZeroReflection</RepositoryUrl>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<PackageProjectUrl>https://github.com/younos1986/ZeroReflection</PackageProjectUrl>
+
+	<SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildProjectDirectory)\</SolutionDir>
+	<PackageOutputPath>$(SolutionDir)artifacts\bin\</PackageOutputPath>
+	
+	<!-- SOURCE GENERATOR IMPORTANT SETTINGS -->
+	<OutputItemType>Analyzer</OutputItemType>
+	<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+	<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+	<IsRoslynComponent>true</IsRoslynComponent>
+	<IncludeBuildOutput>false</IncludeBuildOutput>
+	
+	<!-- Suppress NuGet warning NU5128 about missing lib folder - expected for source generators -->
+	<NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" GeneratePathProperty="true" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\swagger.html" />
+    <EmbeddedResource Include="Resources\lib\bootstrap\bootstrap.min.css" />
+    <EmbeddedResource Include="Resources\lib\bootstrap\bootstrap.bundle.min.js" />
+  </ItemGroup>
+
+  <!-- This ensures the library will be packaged as a source generator when we use `dotnet pack` -->
+  <ItemGroup>
+    <!-- Include the generator DLL in the analyzers path -->
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+</Project>

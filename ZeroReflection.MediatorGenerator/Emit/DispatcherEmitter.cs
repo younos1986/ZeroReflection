@@ -15,6 +15,7 @@ namespace ZeroReflection.MediatorGenerator.Emit
             sb.AppendLine("using System.Threading.Tasks;");
             sb.AppendLine("using System.Runtime.CompilerServices;");
             sb.AppendLine("using ZeroReflection.Mediator;");
+            sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
             
             foreach (var ns in namespaces.Where(n => !string.IsNullOrWhiteSpace(n) && 
                                                       n != "ZeroReflection.Mediator" &&
@@ -70,18 +71,28 @@ namespace ZeroReflection.MediatorGenerator.Emit
             // Public wrapper class
             sb.AppendLine("    public sealed class GeneratedMediatorDispatcher : IGeneratedMediatorDispatcher");
             sb.AppendLine("    {");
-            sb.AppendLine("        private readonly System.IServiceProvider _serviceProvider;");
+            sb.AppendLine("        private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _serviceScopeFactory;");
             sb.AppendLine();
-            sb.AppendLine("        public GeneratedMediatorDispatcher(System.IServiceProvider serviceProvider)");
+            sb.AppendLine("        public GeneratedMediatorDispatcher(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory serviceScopeFactory)");
             sb.AppendLine("        {");
-            sb.AppendLine("            _serviceProvider = serviceProvider;");
+            sb.AppendLine("            _serviceScopeFactory = serviceScopeFactory;");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine("        public Task<(bool handled, object result)> TryHandle(object request, Type requestType, Type responseType, CancellationToken cancellationToken)");
-            sb.AppendLine("            => __GeneratedMediatorDispatcherStatic.TryHandle(request, requestType, responseType, _serviceProvider, cancellationToken);");
+            sb.AppendLine("        public async Task<(bool handled, object result)> TryHandle(object request, Type requestType, Type responseType, CancellationToken cancellationToken)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            using (var scope = _serviceScopeFactory.CreateScope())");
+            sb.AppendLine("            {");
+            sb.AppendLine("                return await __GeneratedMediatorDispatcherStatic.TryHandle(request, requestType, responseType, scope.ServiceProvider, cancellationToken);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
             sb.AppendLine();
             sb.AppendLine("        public bool TryValidate(object request, Type requestType)");
-            sb.AppendLine("            => __GeneratedMediatorDispatcherStatic.TryValidate(request, requestType, _serviceProvider);");
+            sb.AppendLine("        {");
+            sb.AppendLine("            using (var scope = _serviceScopeFactory.CreateScope())");
+            sb.AppendLine("            {");
+            sb.AppendLine("                return __GeneratedMediatorDispatcherStatic.TryValidate(request, requestType, scope.ServiceProvider);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
             sb.AppendLine("    }");
             sb.AppendLine("}");
 

@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroReflection API Explorer</title>
+    
+    <!-- Bootstrap CSS (local) -->
+    <link rel="stylesheet" href="/swagger/lib/bootstrap/bootstrap.min.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-color: #48bb78;
+            --react-color: #61dafb;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .app-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .controller-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+        
+        .controller-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .method-badge {
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            min-width: 70px;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        .method-GET { background-color: #61affe; color: white; }
+        .method-POST { background-color: #49cc90; color: white; }
+        .method-PUT { background-color: #fca130; color: white; }
+        .method-DELETE { background-color: #f93e3e; color: white; }
+        .method-PATCH { background-color: #50e3c2; color: white; }
+        
+        .btn-angular {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-angular:hover {
+            background-color: #38a169;
+            border-color: #38a169;
+            color: white;
+        }
+        
+        .btn-react {
+            background-color: var(--react-color);
+            border-color: var(--react-color);
+            color: #20232a;
+            font-weight: 600;
+        }
+        
+        .btn-react:hover {
+            background-color: #4fc3dc;
+            border-color: #4fc3dc;
+            color: #20232a;
+        }
+        
+        .btn-config {
+            background-color: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.4);
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .btn-config:hover {
+            background-color: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.6);
+            color: white;
+        }
+        
+        .btn-config.active {
+            background-color: #48bb78;
+            border-color: #48bb78;
+        }
+        
+        .code-viewer {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 0.25rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            background: var(--primary-gradient);
+            color: white;
+        }
+        
+        /* Wider modal */
+        .modal-dialog.modal-fullwidth {
+            max-width: 95vw;
+            margin: 1rem;
+        }
+        
+        /* Endpoint card styling */
+        .endpoint-card {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        
+        .endpoint-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        
+        .endpoint-header {
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.2s;
+        }
+        
+        .endpoint-header:hover {
+            background: #f5f5f5;
+        }
+        
+        .endpoint-route {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .endpoint-summary {
+            color: #666;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+        
+        .endpoint-body {
+            display: none;
+            padding: 1.5rem;
+            background: white;
+        }
+        
+        .endpoint-body.expanded {
+            display: block;
+        }
+        
+        .param-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .param-group h4 {
+            color: #667eea;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .param-input {
+            margin-bottom: 1rem;
+        }
+        
+        .param-input label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .param-input input,
+        .param-input textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .param-input input:focus,
+        .param-input textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .param-input textarea {
+            min-height: 150px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+        
+        .execute-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+        
+        .execute-btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+        
+        .execute-btn:active {
+            transform: translateY(0);
+        }
+        
+        .response {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .response h4 {
+            margin-bottom: 0.75rem;
+            color: #667eea;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .response pre {
+            background: #2d3748;
+            color: #68d391;
+            padding: 1.25rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .status-200,
+        .status-201,
+        .status-204 {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-400,
+        .status-404 {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .status-500 {
+            background: #feb2b2;
+            color: #742a2a;
+        }
+        
+        .collapse {
+            display: none;
+        }
+        
+        .collapse.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="container">
+            <h1 class="display-4 mb-2">🚀 ZeroReflection API Explorer</h1>
+            <p class="lead mb-3">AOT-Compatible API Testing Interface</p>
+            <div class="d-flex gap-2">
+                <a href="/swagger/api/endpoints.json" target="_blank" class="btn btn-light btn-sm">
+                    📄 View Raw JSON
+                </a>
+                <button class="btn btn-config btn-sm" id="config-btn" onclick="showConfigModal()">
+                    ⚙️ Configure
+                </button>
+            </div>
+        </div>
+    </header>
+    
+<!-- Main Container -->
+<div class="container my-4">
+    <div id="endpoints-container">
+        <p class="text-center p-5 text-muted">Loading endpoints...</p>
+    </div>
+</div>
+
+<!-- TypeScript Modal -->
+<div class="modal fade" id="typescript-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullwidth modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">📄 TypeScript API Service</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre class="code-viewer mb-0" id="typescript-content">Loading TypeScript service...</pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="copyTypeScriptToClipboard()">
+                    📋 Copy to Clipboard
+                </button>
+                <button type="button" class="btn btn-success" onclick="downloadTypeScript()">
+                    💾 Download File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration Modal -->
+<div class="modal fade" id="config-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⚙️ API Configuration</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="auth-header" class="form-label fw-bold">Authorization Header</label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="auth-header" 
+                        placeholder="Bearer your-token-here"
+                        value="">
+                    <div class="form-text">
+                        This header will be added to all API requests.
+                        <br>
+                        Example: <code>Bearer eyJhbGciOiJIUzI1NiIs...</code>
+                    </div>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="auth-enabled" checked>
+                    <label class="form-check-label" for="auth-enabled">
+                        Enable Authorization Header
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="saveConfig()">💾 Save Configuration</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS (local) -->
+<script src="/swagger/lib/bootstrap/bootstrap.bundle.min.js"></script>
+    
+<!-- Application JS -->
+<script>
+        // Bootstrap Modal class (inlined to ensure it's available)
+        class BootstrapModal {
+            constructor(element) {
+                this.element = element;
+                this.backdrop = null;
+                
+                // Setup close button click handlers
+                const closeButtons = this.element.querySelectorAll('[data-bs-dismiss="modal"]');
+                closeButtons.forEach(btn => {
+                    btn.addEventListener('click', () => this.hide());
+                });
+            }
+            
+            show() {
+                this.element.classList.add('show');
+                this.element.style.display = 'block';
+                this.element.setAttribute('aria-modal', 'true');
+                this.element.setAttribute('role', 'dialog');
+                this.element.removeAttribute('aria-hidden');
+                document.body.classList.add('modal-open');
+                
+                // Create backdrop
+                this.backdrop = document.createElement('div');
+                this.backdrop.className = 'modal-backdrop fade show';
+                document.body.appendChild(this.backdrop);
+                
+                // Click outside to close
+                this.backdrop.addEventListener('click', () => this.hide());
+            }
+            
+            hide() {
+                this.element.classList.remove('show');
+                this.element.style.display = 'none';
+                this.element.setAttribute('aria-hidden', 'true');
+                this.element.removeAttribute('aria-modal');
+                this.element.removeAttribute('role');
+                document.body.classList.remove('modal-open');
+                
+                if (this.backdrop) {
+                    this.backdrop.remove();
+                    this.backdrop = null;
+                }
+            }
+            
+            toggle() {
+                if (this.element.classList.contains('show')) {
+                    this.hide();
+                } else {
+                    this.show();
+                }
+            }
+        }
+        
+        // ESC key to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    if (modal._bsModal) {
+                        modal._bsModal.hide();
+                    }
+                });
+            }
+        });
+        
+        // Main application code
+        let endpoints = [];
+        
+        // Configuration management
+        let apiConfig = {
+            authorizationHeader: '',
+            authEnabled: false
+        };
+        
+        // Load config from localStorage
+        function loadConfig() {
+            try {
+                const saved = localStorage.getItem('zeroreflection-api-config');
+                if (saved) {
+                    apiConfig = JSON.parse(saved);
+                    updateConfigButton();
+                }
+            } catch (e) {
+                console.warn('Failed to load config:', e);
+            }
+        }
+        
+        // Save config to localStorage
+        function saveConfigToStorage() {
+            try {
+                localStorage.setItem('zeroreflection-api-config', JSON.stringify(apiConfig));
+            } catch (e) {
+                console.warn('Failed to save config:', e);
+            }
+        }
+        
+        // Update config button appearance
+        function updateConfigButton() {
+            const btn = document.getElementById('config-btn');
+            if (btn) {
+                if (apiConfig.authEnabled && apiConfig.authorizationHeader) {
+                    btn.classList.add('active');
+                    btn.title = 'Authorization configured';
+                } else {
+                    btn.classList.remove('active');
+                    btn.title = 'Configure API settings';
+                }
+            }
+        }
+        
+        let configModalInstance = null;
+        
+        // Show config modal
+        function showConfigModal() {
+            const modal = document.getElementById('config-modal');
+            const authHeader = document.getElementById('auth-header');
+            const authEnabled = document.getElementById('auth-enabled');
+            
+            // Load current values
+            authHeader.value = apiConfig.authorizationHeader || '';
+            authEnabled.checked = apiConfig.authEnabled || false;
+            
+            if (!configModalInstance) {
+                configModalInstance = new BootstrapModal(modal);
+                modal._bsModal = configModalInstance;
+            }
+            
+            configModalInstance.show();
+        }
+        
+        // Save configuration
+        function saveConfig() {
+            const authHeader = document.getElementById('auth-header').value.trim();
+            const authEnabled = document.getElementById('auth-enabled').checked;
+            
+            apiConfig.authorizationHeader = authHeader;
+            apiConfig.authEnabled = authEnabled;
+            
+            saveConfigToStorage();
+            updateConfigButton();
+            
+            if (configModalInstance) {
+                configModalInstance.hide();
+            }
+            
+            // Show success message
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Saved!';
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 1500);
+        }
+        
+        // Get headers with optional authorization
+        function getRequestHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            
+            if (apiConfig.authEnabled && apiConfig.authorizationHeader) {
+                headers['Authorization'] = apiConfig.authorizationHeader;
+            }
+            
+            return headers;
+        }
+        
+        async function loadEndpoints() {
+            try {
+                const response = await fetch('/swagger/api/endpoints.json');
+                const data = await response.json();
+                endpoints = data.Endpoints || data.endpoints || [];
+                if (endpoints.length === 0) {
+                    console.warn('No endpoints found in response:', data);
+                }
+                renderEndpoints();
+            } catch (error) {
+                console.error('Error loading endpoints:', error);
+                document.getElementById('endpoints-container').innerHTML = 
+                    '<p style="color: red; text-align: center;">Failed to load endpoints: ' + error.message + '</p>';
+            }
+        }
+        
+        function renderEndpoints() {
+            const container = document.getElementById('endpoints-container');
+            container.innerHTML = '';
+            
+            if (endpoints.length === 0) {
+                container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #999;">No endpoints available</p>';
+                return;
+            }
+            
+            // Group endpoints by controller
+            const groupedEndpoints = {};
+            endpoints.forEach(endpoint => {
+                const controller = endpoint.Controller || 'Default';
+                if (!groupedEndpoints[controller]) {
+                    groupedEndpoints[controller] = [];
+                }
+                groupedEndpoints[controller].push(endpoint);
+            });
+            
+            // Render each controller group
+            let globalIndex = 0;
+            Object.keys(groupedEndpoints).sort().forEach(controllerName => {
+                const controllerEndpoints = groupedEndpoints[controllerName];
+                const groupDiv = createControllerGroup(controllerName, controllerEndpoints, globalIndex);
+                container.appendChild(groupDiv);
+                globalIndex += controllerEndpoints.length;
+            });
+        }
+        
+        function createControllerGroup(controllerName, controllerEndpoints, startIndex) {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'mb-3';
+            
+            // Create controller card
+            const card = document.createElement('div');
+            card.className = 'card controller-card';
+            
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body';
+            
+            const headerRow = document.createElement('div');
+            headerRow.className = 'd-flex justify-content-between align-items-center';
+            
+            // Left side: controller info
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'd-flex align-items-center gap-3';
+            infoDiv.style.cursor = 'pointer';
+            infoDiv.onclick = () => toggleController(controllerName);
+            
+            const nameHeading = document.createElement('h5');
+            nameHeading.className = 'mb-0 text-primary';
+            nameHeading.textContent = controllerName;
+            
+            const countBadge = document.createElement('span');
+            countBadge.className = 'badge bg-primary';
+            countBadge.textContent = `${controllerEndpoints.length} endpoint${controllerEndpoints.length !== 1 ? 's' : ''}`;
+            
+            infoDiv.appendChild(nameHeading);
+            infoDiv.appendChild(countBadge);
+            
+            // Right side: action buttons
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'd-flex gap-2';
+            
+            const angularBtn = document.createElement('button');
+            angularBtn.className = 'btn btn-angular btn-sm';
+            angularBtn.textContent = '⚛️ Angular';
+            angularBtn.onclick = (e) => {
+                e.stopPropagation();
+                showControllerTypeScriptModal(controllerName, controllerEndpoints, 'angular');
+            };
+            
+            const reactBtn = document.createElement('button');
+            reactBtn.className = 'btn btn-react btn-sm';
+            reactBtn.textContent = '⚛️ React';
+            reactBtn.onclick = (e) => {
+                e.stopPropagation();
+                showControllerTypeScriptModal(controllerName, controllerEndpoints, 'react');
+            };
+            
+            actionsDiv.appendChild(angularBtn);
+            actionsDiv.appendChild(reactBtn);
+            
+            headerRow.appendChild(infoDiv);
+            headerRow.appendChild(actionsDiv);
+            cardBody.appendChild(headerRow);
+            card.appendChild(cardBody);
+            
+            // Create endpoints container (collapsed by default)
+            const endpointsContainer = document.createElement('div');
+            endpointsContainer.className = 'collapse';
+            endpointsContainer.id = `controller-${controllerName}`;
+            
+            const endpointsBody = document.createElement('div');
+            endpointsBody.className = 'card-body border-top';
+            
+            controllerEndpoints.forEach((endpoint, index) => {
+                const endpointCard = createEndpointCard(endpoint, startIndex + index);
+                endpointsBody.appendChild(endpointCard);
+            });
+            
+            endpointsContainer.appendChild(endpointsBody);
+            card.appendChild(endpointsContainer);
+            
+            groupDiv.appendChild(card);
+            return groupDiv;
+        }
+        
+        function toggleController(controllerName) {
+            const container = document.getElementById(`controller-${controllerName}`);
+            if (container) {
+                container.classList.toggle('show');
+            }
+        }
+        
+        function createEndpointCard(endpoint, index) {
+            const card = document.createElement('div');
+            card.className = 'endpoint-card';
+            
+            const header = document.createElement('div');
+            header.className = 'endpoint-header';
+            header.onclick = () => toggleEndpoint(index);
+            
+            const methodBadge = document.createElement('span');
+            methodBadge.className = `method ${endpoint.Method}`;
+            methodBadge.textContent = endpoint.Method;
+            
+            const route = document.createElement('span');
+            route.className = 'route';
+            route.textContent = endpoint.Route;
+            
+            header.appendChild(methodBadge);
+            header.appendChild(route);
+            
+            if (endpoint.Summary) {
+                const summary = document.createElement('div');
+                summary.className = 'summary';
+                summary.textContent = endpoint.Summary;
+                const wrapper = document.createElement('div');
+                wrapper.style.flex = '1';
+                wrapper.appendChild(route);
+                wrapper.appendChild(summary);
+                header.innerHTML = '';
+                header.appendChild(methodBadge);
+                header.appendChild(wrapper);
+            }
+            
+            const body = document.createElement('div');
+            body.className = 'endpoint-body';
+            body.id = `endpoint-body-${index}`;
+            body.innerHTML = createEndpointBody(endpoint, index);
+            
+            card.appendChild(header);
+            card.appendChild(body);
+            
+            return card;
+        }
+        
+        function createEndpointBody(endpoint, index) {
+            let html = '<div class="parameters">';
+            
+            const routeParams = endpoint.Parameters.filter(p => p.Source === 'route');
+            const queryParams = endpoint.Parameters.filter(p => p.Source === 'query');
+            const bodyParams = endpoint.Parameters.filter(p => p.Source === 'body');
+            
+            if (routeParams.length > 0) {
+                html += '<div class="param-group">';
+                html += '<h4>Route Parameters</h4>';
+                routeParams.forEach(param => {
+                    html += `
+                        <div class="param-input">
+                            <label>${param.Name} <span style="color: #999;">(${param.Type})</span> ${param.IsRequired ? '<span style="color: red;">*</span>' : ''}</label>
+                            <input type="text" id="param-${index}-${param.Name}" placeholder="Enter ${param.Name}" />
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            if (queryParams.length > 0) {
+                html += '<div class="param-group">';
+                html += '<h4>Query Parameters</h4>';
+                queryParams.forEach(param => {
+                    html += `
+                        <div class="param-input">
+                            <label>${param.Name} <span style="color: #999;">(${param.Type})</span></label>
+                            <input type="text" id="param-${index}-${param.Name}" placeholder="Enter ${param.Name}" />
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            if (bodyParams.length > 0) {
+                html += '<div class="param-group">';
+                html += '<h4>Request Body</h4>';
+                const sampleBody = JSON.stringify({ [bodyParams[0].Name]: {} }, null, 2);
+                html += `
+                    <div class="param-input">
+                        <label>JSON Body</label>
+                        <textarea id="body-${index}" placeholder="Enter JSON body">${sampleBody}</textarea>
+                    </div>
+                `;
+                html += '</div>';
+            }
+            
+            html += `<button class="execute-btn" onclick="executeEndpoint(${index})">? Execute</button>`;
+            html += `<div id="response-${index}"></div>`;
+            html += '</div>';
+            
+            return html;
+        }
+        
+        function toggleEndpoint(index) {
+            const body = document.getElementById(`endpoint-body-${index}`);
+            body.classList.toggle('expanded');
+        }
+        
+        async function executeEndpoint(index) {
+            const endpoint = endpoints[index];
+            const responseDiv = document.getElementById(`response-${index}`);
+            responseDiv.innerHTML = '<p>Executing...</p>';
+            
+            try {
+                let url = endpoint.Route;
+                
+                const routeParams = endpoint.Parameters.filter(p => p.Source === 'route');
+                routeParams.forEach(param => {
+                    const value = document.getElementById(`param-${index}-${param.Name}`).value;
+                    url = url.replace(`{${param.Name}}`, value);
+                });
+                
+                const queryParams = endpoint.Parameters.filter(p => p.Source === 'query');
+                if (queryParams.length > 0) {
+                    const queryString = queryParams
+                        .map(param => {
+                            const value = document.getElementById(`param-${index}-${param.Name}`).value;
+                            return value ? `${param.Name}=${encodeURIComponent(value)}` : '';
+                        })
+                        .filter(q => q)
+                        .join('&');
+                    if (queryString) url += '?' + queryString;
+                }
+                
+                const options = {
+                    method: endpoint.Method,
+                    headers: getRequestHeaders()
+                };
+                
+                if (['POST', 'PUT', 'PATCH'].includes(endpoint.Method)) {
+                    const bodyEl = document.getElementById(`body-${index}`);
+                    if (bodyEl) {
+                        options.body = bodyEl.value;
+                    }
+                }
+                
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                responseDiv.innerHTML = `
+                    <div class="response">
+                        <span class="status-badge status-${response.status}">? ${response.status} ${response.statusText}</span>
+                        <h4>Response</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="response">
+                        <span class="status-badge status-500">? Error</span>
+                        <h4>Error</h4>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+        
+        
+        
+        
+        // TypeScript Modal Functions
+        let typeScriptContent = '';
+        let currentControllerName = '';
+        let currentFramework = 'angular';
+        let modalInstance = null;
+        
+        async function showControllerTypeScriptModal(controllerName, controllerEndpoints, framework = 'angular') {
+            currentControllerName = controllerName;
+            currentFramework = framework;
+            
+            const modal = document.getElementById('typescript-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const frameworkName = framework === 'react' ? 'React' : 'Angular';
+            modalTitle.textContent = `📄 ${frameworkName} Service - ${controllerName}`;
+            
+            // Initialize modal instance if not exists
+            if (!modalInstance) {
+                modalInstance = new BootstrapModal(modal);
+                modal._bsModal = modalInstance; // Store reference for ESC key handler
+            }
+            
+            // Show modal
+            modalInstance.show();
+            
+            // Show loading message
+            document.getElementById('typescript-content').textContent = 'Generating TypeScript service...';
+            
+            // Generate TypeScript asynchronously
+            try {
+                const tsContent = framework === 'react' 
+                    ? await generateReactService(controllerName, controllerEndpoints)
+                    : await generateControllerTypeScript(controllerName, controllerEndpoints);
+                typeScriptContent = tsContent;
+                document.getElementById('typescript-content').textContent = tsContent;
+            } catch (error) {
+                console.error('TypeScript generation error:', error);
+                document.getElementById('typescript-content').textContent = 
+                    'Error generating TypeScript service: ' + error.message;
+            }
+        }
+        
+        async function generateReactService(controllerName, controllerEndpoints) {
+            // Extract unique types from this controller's endpoints
+            const types = new Set();
+            
+            controllerEndpoints.forEach(endpoint => {
+                // Extract from response type
+                if (endpoint.ResponseType) {
+                    const responseType = extractTypeName(endpoint.ResponseType);
+                    if (responseType && !isSystemType(responseType)) {
+                        types.add(responseType);
+                    }
+                }
+                
+                // Extract from parameters
+                endpoint.Parameters.forEach(param => {
+                    if (param.Source !== 'cancellationToken') {
+                        const paramType = extractTypeName(param.Type);
+                        if (paramType && !isSystemType(paramType)) {
+                            types.add(paramType);
+                        }
+                    }
+                });
+            });
+            
+            // Build TypeScript content for React
+            let ts = '/* Auto-generated React TypeScript service from ZeroReflection API */\n';
+            ts += `/* Generated at: ${new Date().toISOString()} */\n`;
+            ts += `/* Controller: ${controllerName} */\n\n`;
+            
+            // Generate DTOs section
+            ts += '// ==================== Types ====================\n\n';
+            
+            if (types.size > 0) {
+                for (const typeName of Array.from(types).sort()) {
+                    ts += await generateTypeScriptInterface(typeName);
+                }
+            } else {
+                ts += '// No complex types found\n\n';
+            }
+            
+            // Generate API client class
+            ts += '// ==================== API Client ====================\n\n';
+            ts += `export class ${controllerName}Api {\n`;
+            ts += "  private baseUrl: string = '/api'; // Configure your API base URL\n\n";
+            ts += '  constructor(baseUrl?: string) {\n';
+            ts += '    if (baseUrl) this.baseUrl = baseUrl;\n';
+            ts += '  }\n\n';
+            
+            // Generate methods
+            controllerEndpoints.forEach((endpoint, index) => {
+                if (index > 0) ts += '\n';
+                ts += generateReactServiceMethod(endpoint);
+            });
+            
+            ts += '}\n\n';
+            
+            // Generate React hooks
+            ts += '// ==================== React Hooks ====================\n\n';
+            ts += `const ${controllerName.toLowerCase()}Api = new ${controllerName}Api();\n\n`;
+            
+            controllerEndpoints.forEach((endpoint, index) => {
+                if (index > 0) ts += '\n';
+                ts += generateReactHook(endpoint, controllerName);
+            });
+            
+            return ts;
+        }
+        
+        function generateReactServiceMethod(endpoint) {
+            const methodName = getMethodName(endpoint.Action);
+            const routeParams = endpoint.Parameters.filter(p => p.Source === 'route');
+            const queryParams = endpoint.Parameters.filter(p => p.Source === 'query');
+            const bodyParams = endpoint.Parameters.filter(p => p.Source === 'body');
+            
+            // Build parameter list
+            const parameters = [];
+            routeParams.forEach(p => {
+                parameters.push(`${p.Name}: ${mapTypeToTS(p.Type)}`);
+            });
+            queryParams.forEach(p => {
+                parameters.push(`${p.Name}?: ${mapTypeToTS(p.Type)}`);
+            });
+            bodyParams.forEach(p => {
+                parameters.push(`${p.Name}: ${getCleanTypeName(p.Type)}`);
+            });
+            
+            // Determine return type
+            const returnType = getReturnType(endpoint.ResponseType);
+            
+            let ts = '';
+            
+            // Add JSDoc comment
+            if (endpoint.Summary) {
+                ts += '  /**\n';
+                ts += `   * ${endpoint.Summary}\n`;
+                ts += '   */\n';
+            }
+            
+            // Method signature
+            ts += `  async ${methodName}(${parameters.join(', ')}): Promise<${returnType}> {\n`;
+            
+            // Build URL
+            let url = endpoint.Route;
+            routeParams.forEach(p => {
+                url = url.replace(`{${p.Name}}`, `\${${p.Name}}`);
+            });
+            ts += `    let url = \`\${this.baseUrl}${url}\`;\n`;
+            
+            // Add query parameters if any
+            if (queryParams.length > 0) {
+                ts += '    const params = new URLSearchParams();\n';
+                queryParams.forEach(p => {
+                    ts += `    if (${p.Name} !== undefined) {\n`;
+                    ts += `      params.append('${p.Name}', ${p.Name}.toString());\n`;
+                    ts += '    }\n';
+                });
+                ts += '    const queryString = params.toString();\n';
+                ts += '    if (queryString) url += `?${queryString}`;\n';
+            }
+            
+            // HTTP call
+            const httpMethod = endpoint.Method.toUpperCase();
+            ts += '\n    const response = await fetch(url, {\n';
+            ts += `      method: '${httpMethod}',\n`;
+            ts += "      headers: { 'Content-Type': 'application/json' },\n";
+            
+            if (bodyParams.length > 0) {
+                const bodyParam = bodyParams[0].Name;
+                ts += `      body: JSON.stringify(${bodyParam}),\n`;
+            }
+            
+            ts += '    });\n\n';
+            ts += '    if (!response.ok) {\n';
+            ts += '      throw new Error(`HTTP error! status: ${response.status}`);\n';
+            ts += '    }\n\n';
+            
+            if (returnType === 'void') {
+                ts += '    return;\n';
+            } else {
+                ts += '    return await response.json();\n';
+            }
+            
+            ts += '  }\n';
+            
+            return ts;
+        }
+        
+        function generateReactHook(endpoint, controllerName) {
+            const methodName = getMethodName(endpoint.Action);
+            const hookName = `use${capitalizeFirst(methodName)}`;
+            const returnType = getReturnType(endpoint.ResponseType);
+            
+            let ts = '';
+            
+            if (endpoint.Summary) {
+                ts += '/**\n';
+                ts += ` * ${endpoint.Summary}\n`;
+                ts += ' */\n';
+            }
+            
+            ts += `export function ${hookName}() {\n`;
+            ts += '  const [data, setData] = React.useState<' + returnType + ' | null>(null);\n';
+            ts += '  const [loading, setLoading] = React.useState(false);\n';
+            ts += '  const [error, setError] = React.useState<Error | null>(null);\n\n';
+            
+            // Build parameter list for the execute function
+            const routeParams = endpoint.Parameters.filter(p => p.Source === 'route');
+            const queryParams = endpoint.Parameters.filter(p => p.Source === 'query');
+            const bodyParams = endpoint.Parameters.filter(p => p.Source === 'body');
+            
+            const executeParams = [];
+            routeParams.forEach(p => {
+                executeParams.push(`${p.Name}: ${mapTypeToTS(p.Type)}`);
+            });
+            queryParams.forEach(p => {
+                executeParams.push(`${p.Name}?: ${mapTypeToTS(p.Type)}`);
+            });
+            bodyParams.forEach(p => {
+                executeParams.push(`${p.Name}: ${getCleanTypeName(p.Type)}`);
+            });
+            
+            ts += `  const execute = async (${executeParams.join(', ')}) => {\n`;
+            ts += '    try {\n';
+            ts += '      setLoading(true);\n';
+            ts += '      setError(null);\n';
+            
+            // Build the API call parameters
+            const apiCallParams = [];
+            routeParams.forEach(p => apiCallParams.push(p.Name));
+            queryParams.forEach(p => apiCallParams.push(p.Name));
+            bodyParams.forEach(p => apiCallParams.push(p.Name));
+            
+            ts += `      const result = await ${controllerName.toLowerCase()}Api.${methodName}(${apiCallParams.join(', ')});\n`;
+            ts += '      setData(result);\n';
+            ts += '      return result;\n';
+            ts += '    } catch (err) {\n';
+            ts += '      const error = err instanceof Error ? err : new Error(String(err));\n';
+            ts += '      setError(error);\n';
+            ts += '      throw error;\n';
+            ts += '    } finally {\n';
+            ts += '      setLoading(false);\n';
+            ts += '    }\n';
+            ts += '  };\n\n';
+            
+            ts += '  return { data, loading, error, execute };\n';
+            ts += '}\n';
+            
+            return ts;
+        }
+        
+        function capitalizeFirst(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        
+        async function generateControllerTypeScript(controllerName, controllerEndpoints) {
+            // Extract unique types from this controller's endpoints
+            const types = new Set();
+            
+            controllerEndpoints.forEach(endpoint => {
+                // Extract from response type
+                if (endpoint.ResponseType) {
+                    const responseType = extractTypeName(endpoint.ResponseType);
+                    if (responseType && !isSystemType(responseType)) {
+                        types.add(responseType);
+                    }
+                }
+                
+                // Extract from parameters
+                endpoint.Parameters.forEach(param => {
+                    if (param.Source !== 'cancellationToken') {
+                        const paramType = extractTypeName(param.Type);
+                        if (paramType && !isSystemType(paramType)) {
+                            types.add(paramType);
+                        }
+                    }
+                });
+            });
+            
+            // Build TypeScript content
+            let ts = '/* Auto-generated TypeScript service from ZeroReflection API */\n';
+            ts += `/* Generated at: ${new Date().toISOString()} */\n`;
+            ts += `/* Controller: ${controllerName} */\n\n`;
+            ts += "import { Injectable } from '@angular/core';\n";
+            ts += "import { HttpClient, HttpParams } from '@angular/common/http';\n";
+            ts += "import { Observable } from 'rxjs';\n\n";
+            
+            // Generate DTOs section
+            ts += '// ==================== DTOs ====================\n\n';
+            
+            if (types.size > 0) {
+                for (const typeName of Array.from(types).sort()) {
+                    ts += await generateTypeScriptInterface(typeName);
+                }
+            } else {
+                ts += '// No complex types found\n\n';
+            }
+            
+            // Generate service
+            ts += '// ==================== Service ====================\n\n';
+            ts += '@Injectable({\n';
+            ts += "  providedIn: 'root'\n";
+            ts += '})\n';
+            ts += `export class ${controllerName}Service {\n`;
+            ts += "  private baseUrl = '/api'; // Configure your API base URL\n\n";
+            ts += '  constructor(private http: HttpClient) {}\n\n';
+            
+            // Generate methods
+            controllerEndpoints.forEach((endpoint, index) => {
+                if (index > 0) ts += '\n';
+                ts += generateServiceMethod(endpoint);
+            });
+            
+            ts += '}\n';
+            
+            return ts;
+        }
+        
+        function extractTypeName(fullType) {
+            if (!fullType) return null;
+            
+            // Extract type from Task<T>, List<T>, etc.
+            const genericStart = fullType.indexOf('<');
+            const genericEnd = fullType.lastIndexOf('>');
+            
+            if (genericStart >= 0 && genericEnd > genericStart) {
+                return fullType.substring(genericStart + 1, genericEnd - genericStart - 1);
+            }
+            
+            return fullType;
+        }
+        
+        function isSystemType(typeName) {
+            if (!typeName) return true;
+            const systemTypes = ['string', 'int', 'bool', 'double', 'float', 'decimal', 'DateTime', 'Guid', 'Unit'];
+            return systemTypes.some(t => typeName.includes(t)) || 
+                   typeName.startsWith('System.') ||
+                   typeName.includes('ZeroReflection.Mediator.Unit') ||
+                   typeName.includes('CancellationToken');
+        }
+        
+        function getCleanTypeName(fullTypeName) {
+            const parts = fullTypeName.split('.');
+            return parts[parts.length - 1];
+        }
+        
+        async function generateTypeScriptInterface(fullTypeName) {
+            const cleanName = getCleanTypeName(fullTypeName);
+            
+            let ts = `/** ${cleanName} model */\n`;
+            ts += `export interface ${cleanName} {\n`;
+            ts += '  // TODO: Add properties based on your backend model\n';
+            ts += '  [key: string]: any;\n';
+            ts += '}\n\n';
+            
+            return ts;
+        }
+        
+        function generateServiceMethod(endpoint) {
+            const methodName = getMethodName(endpoint.Action);
+            const routeParams = endpoint.Parameters.filter(p => p.Source === 'route');
+            const queryParams = endpoint.Parameters.filter(p => p.Source === 'query');
+            const bodyParams = endpoint.Parameters.filter(p => p.Source === 'body');
+            
+            // Build parameter list
+            const parameters = [];
+            routeParams.forEach(p => {
+                parameters.push(`${p.Name}: ${mapTypeToTS(p.Type)}`);
+            });
+            queryParams.forEach(p => {
+                parameters.push(`${p.Name}?: ${mapTypeToTS(p.Type)}`);
+            });
+            bodyParams.forEach(p => {
+                parameters.push(`${p.Name}: ${getCleanTypeName(p.Type)}`);
+            });
+            
+            // Determine return type
+            const returnType = getReturnType(endpoint.ResponseType);
+            
+            let ts = '';
+            
+            // Add JSDoc comment
+            if (endpoint.Summary) {
+                ts += '  /**\n';
+                ts += `   * ${endpoint.Summary}\n`;
+                ts += '   */\n';
+            }
+            
+            // Method signature
+            ts += `  ${methodName}(${parameters.join(', ')}): Observable<${returnType}> {\n`;
+            
+            // Build URL
+            let url = endpoint.Route;
+            routeParams.forEach(p => {
+                url = url.replace(`{${p.Name}}`, `\${${p.Name}}`);
+            });
+            ts += `    const url = \`\${this.baseUrl}${url}\`;\n`;
+            
+            // Add query parameters if any
+            if (queryParams.length > 0) {
+                ts += '    let params = new HttpParams();\n';
+                queryParams.forEach(p => {
+                    ts += `    if (${p.Name} !== undefined) {\n`;
+                    ts += `      params = params.set('${p.Name}', ${p.Name}.toString());\n`;
+                    ts += '    }\n';
+                });
+            }
+            
+            // HTTP call
+            const httpMethod = endpoint.Method.toLowerCase();
+            if (bodyParams.length > 0) {
+                const bodyParam = bodyParams[0].Name;
+                if (queryParams.length > 0) {
+                    ts += `    return this.http.${httpMethod}<${returnType}>(url, ${bodyParam}, { params });\n`;
+                } else {
+                    ts += `    return this.http.${httpMethod}<${returnType}>(url, ${bodyParam});\n`;
+                }
+            } else {
+                if (queryParams.length > 0) {
+                    ts += `    return this.http.${httpMethod}<${returnType}>(url, { params });\n`;
+                } else {
+                    ts += `    return this.http.${httpMethod}<${returnType}>(url);\n`;
+                }
+            }
+            
+            ts += '  }\n';
+            
+            return ts;
+        }
+        
+        function getMethodName(actionName) {
+            if (!actionName) return 'unknownMethod';
+            return actionName.charAt(0).toLowerCase() + actionName.slice(1);
+        }
+        
+        function mapTypeToTS(csharpType) {
+            if (!csharpType) return 'any';
+            if (csharpType.includes('string')) return 'string';
+            if (csharpType.includes('int') || csharpType.includes('Int32') || csharpType.includes('Int64')) return 'number';
+            if (csharpType.includes('double') || csharpType.includes('float') || csharpType.includes('decimal')) return 'number';
+            if (csharpType.includes('bool')) return 'boolean';
+            if (csharpType.includes('DateTime')) return 'string';
+            if (csharpType.includes('Guid')) return 'string';
+            return 'any';
+        }
+        
+        function getReturnType(responseType) {
+            if (!responseType) return 'void';
+            
+            // Handle Task<T>
+            const innerType = extractTypeName(responseType);
+            if (!innerType) return 'void';
+            
+            // Handle List<T>
+            if (innerType.includes('List<')) {
+                const listStart = innerType.indexOf('List<') + 5;
+                const listEnd = innerType.lastIndexOf('>');
+                if (listEnd > listStart) {
+                    const listType = innerType.substring(listStart, listEnd - listStart);
+                    return `${getCleanTypeName(listType)}[]`;
+                }
+            }
+            
+            // Handle Unit (void)
+            if (innerType.includes('Unit')) {
+                return 'void';
+            }
+            
+            // Regular type
+            if (!isSystemType(innerType)) {
+                return getCleanTypeName(innerType);
+            }
+            
+            return mapTypeToTS(innerType);
+        }
+        
+        async function copyTypeScriptToClipboard() {
+            try {
+                await navigator.clipboard.writeText(typeScriptContent);
+                const btn = event.target;
+                const originalText = btn.textContent;
+                const originalClass = btn.className;
+                btn.textContent = '✅ Copied!';
+                btn.className = 'btn btn-success';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.className = originalClass;
+                }, 2000);
+            } catch (error) {
+                alert('Failed to copy to clipboard: ' + error.message);
+            }
+        }
+        
+        function downloadTypeScript() {
+            const blob = new Blob([typeScriptContent], { type: 'text/typescript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const extension = currentFramework === 'react' ? '.api.ts' : '.service.ts';
+            a.download = `${currentControllerName.toLowerCase()}${extension}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Close modal when clicking outside
+        // ESC key handled by Bootstrap
+        
+        // Initialize
+        loadConfig();
+        loadEndpoints();
+    </script>
+</body>
+</html>

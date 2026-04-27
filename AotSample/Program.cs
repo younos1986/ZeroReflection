@@ -1,27 +1,27 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using AotSample.Commands;
-using AotSample.Models.ViewModels;
+﻿using AotSample;
+using AotSample.Generated;
 using Microsoft.Extensions.DependencyInjection;
+using ZeroReflection.Api;
 using ZeroReflection.Mapper.Generated;
 using ZeroReflection.Mediator;
 
-Console.WriteLine("Hello, World!");
-
+// Setup dependency injection
 var services = new ServiceCollection();
 services.RegisterZeroReflectionMapping();
 services.RegisterZeroReflectionMediatorHandlers();
+services.RegisterControllers();
+
 var sp = services.BuildServiceProvider();
-var myMediator = sp.GetRequiredService<IMediator>();
 
-await myMediator.Send(new CreateUserCommand
+// Run in appropriate mode based on environment
+if (ApplicationExtensions.IsRunningInLambda())
 {
-    UserModel = new UserModel
-    {
-        Name = "Younes Baghei Moghaddam",
-        Age = 38,
-        Email = "unos.bm65@gmail.com"
-    }
-});
-
-Console.ReadKey();
+    // AWS Lambda mode - delegated to library
+    await sp.RunAsLambdaAsync<AotJsonContext>(GeneratedApiRouter.RouteAsync);
+}
+else
+{
+    // Local mode with Swagger UI
+    using var server = sp.UseSwaggerUI("http://localhost:5100/");
+    Console.ReadKey();
+}

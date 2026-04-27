@@ -112,30 +112,32 @@ namespace ZeroReflection.MediatorGenerator
         {
             var handlers = new List<HandlerInfo>();
             
-            // Collect from current project
+            // Collect from current project using semantic model
             foreach (var handler in classNodes)
             {
                 if (handler == null || handler.BaseList == null)
                     continue;
                     
-                var handlerName = handler.Identifier.Text;
-                var interfaces = handler.BaseList.Types.Select(t => t.ToString()).ToList();
+                var model = compilation.GetSemanticModel(handler.SyntaxTree);
+                var handlerSymbol = model.GetDeclaredSymbol(handler) as INamedTypeSymbol;
                 
-                foreach (var iface in interfaces)
+                if (handlerSymbol == null)
+                    continue;
+
+                var handlerName = handlerSymbol.ToDisplayString();
+                var handlerNamespace = handlerSymbol.ContainingNamespace.ToDisplayString();
+
+                foreach (var iface in handlerSymbol.AllInterfaces)
                 {
-                    if (iface.StartsWith("IRequestHandler<"))
+                    if (iface.Name == "IRequestHandler" && iface.TypeArguments.Length == 2)
                     {
-                        var args = iface.Substring("IRequestHandler<".Length).TrimEnd('>').Split(',');
-                        if (args.Length == 2)
+                        handlers.Add(new HandlerInfo
                         {
-                            handlers.Add(new HandlerInfo
-                            {
-                                HandlerType = handlerName,
-                                RequestType = args[0].Trim(),
-                                ResponseType = args[1].Trim(),
-                                Namespace = (handler.Parent as NamespaceDeclarationSyntax)?.Name.ToString() ?? ""
-                            });
-                        }
+                            HandlerType = handlerName,
+                            RequestType = iface.TypeArguments[0].ToDisplayString(),
+                            ResponseType = iface.TypeArguments[1].ToDisplayString(),
+                            Namespace = handlerNamespace
+                        });
                     }
                 }
             }
@@ -151,25 +153,30 @@ namespace ZeroReflection.MediatorGenerator
         {
             var validators = new List<ValidatorInfo>();
             
-            // Collect from current project
+            // Collect from current project using semantic model
             foreach (var validator in classNodes)
             {
                 if (validator == null || validator.BaseList == null)
                     continue;
                     
-                var validatorName = validator.Identifier.Text;
-                var interfaces = validator.BaseList.Types.Select(t => t.ToString()).ToList();
+                var model = compilation.GetSemanticModel(validator.SyntaxTree);
+                var validatorSymbol = model.GetDeclaredSymbol(validator) as INamedTypeSymbol;
                 
-                foreach (var iface in interfaces)
+                if (validatorSymbol == null)
+                    continue;
+
+                var validatorName = validatorSymbol.ToDisplayString();
+                var validatorNamespace = validatorSymbol.ContainingNamespace.ToDisplayString();
+
+                foreach (var iface in validatorSymbol.AllInterfaces)
                 {
-                    if (iface.StartsWith("IValidator<"))
+                    if (iface.Name == "IValidator" && iface.TypeArguments.Length == 1)
                     {
-                        var requestType = iface.Substring("IValidator<".Length).TrimEnd('>').Trim();
                         validators.Add(new ValidatorInfo
                         {
                             ValidatorType = validatorName,
-                            RequestType = requestType,
-                            Namespace = (validator.Parent as NamespaceDeclarationSyntax)?.Name.ToString() ?? ""
+                            RequestType = iface.TypeArguments[0].ToDisplayString(),
+                            Namespace = validatorNamespace
                         });
                     }
                 }
@@ -211,7 +218,7 @@ namespace ZeroReflection.MediatorGenerator
             sb.AppendLine("        public static Microsoft.Extensions.DependencyInjection.IServiceCollection RegisterZeroReflectionMediatorHandlers(this Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
             sb.AppendLine("        {");
             sb.AppendLine("            // Auto-generated DI registration for handlers");
-            sb.AppendLine($"            services.AddTransient<IMediator, MediatorImplementation>();");
+            sb.AppendLine($"            services.AddScoped<IMediator, MediatorImplementation>();");
             
             if (handlers.Count > 0)
             {
@@ -234,9 +241,9 @@ namespace ZeroReflection.MediatorGenerator
                     
                 processedHandlers.Add(key);
                 
-                sb.AppendLine($"            services.AddTransient<IRequestHandler<{handler.RequestType}, {handler.ResponseType}>, {handler.HandlerType}>();");
+                sb.AppendLine($"            services.AddScoped<IRequestHandler<{handler.RequestType}, {handler.ResponseType}>, {handler.HandlerType}>();");
             }
-
+            
             sb.AppendLine();
             
             // Register validators

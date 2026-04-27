@@ -1,40 +1,80 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AWSProjectType>Lambda</AWSProjectType>
+		<AssemblyName Condition="'$(Configuration)' == 'Release'">bootstrap</AssemblyName>
+		<!-- This property makes the build directory similar to a publish directory and helps the AWS .NET Lambda Mock Test Tool find project dependencies. -->
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<!-- Generate Native AOT image during publishing to improve cold start time. -->
+		<PublishAot>true</PublishAot>
+		<!-- This checks if all nugets used are compatible -->
+		<IsAotCompatible>true</IsAotCompatible>
+		<!-- StripSymbols tells the compiler to strip debugging symbols from the final executable if we're on Linux and put them into their own file. 
+        This will greatly reduce the final executable's size.-->
+		<StripSymbols>true</StripSymbols>
+		<!-- TrimMode partial will only trim assemblies marked as trimmable. To reduce package size make all assemblies trimmable and set TrimMode to full.
+        If there are trim warnings during build, you can hit errors at runtime.-->
+		<TrimMode>partial</TrimMode>
+		<EventSourceSupport>false</EventSourceSupport>
+		<UseSystemResourceKeys>true</UseSystemResourceKeys>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<OptimizationPreference>Speed</OptimizationPreference>
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <PublishAot>true</PublishAot>
-    <InvariantGlobalization>true</InvariantGlobalization>
+		<!-- Avoid the copious logging from the native AOT compiler -->
+		<IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+		<IlcOptimizationPreference>Size</IlcOptimizationPreference>
+	</PropertyGroup>
 
-    <!-- Add a runtime identifier and produce a self-contained native publish -->
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <SelfContained>true</SelfContained>
-  </PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\ZeroReflection.MapperGenerator\ZeroReflection.MapperGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
 
-  <ItemGroup>
-      <ProjectReference Include="..\ZeroReflection.MapperGenerator\ZeroReflection.MapperGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
+		<!-- Use a normal project reference so the assembly is included at runtime -->
+		<ProjectReference Include="..\ZeroReflection.Mapper\ZeroReflection.Mapper.csproj" />
 
-      <!-- Use a normal project reference so the assembly is included at runtime -->
-      <ProjectReference Include="..\ZeroReflection.Mapper\ZeroReflection.Mapper.csproj" />
+		<ProjectReference Include="..\ZeroReflection.MediatorGenerator\ZeroReflection.MediatorGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
 
-      <ProjectReference Include="..\ZeroReflection.MediatorGenerator\ZeroReflection.MediatorGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
+		<!-- Use a normal project reference so the assembly is included at runtime -->
+		<ProjectReference Include="..\ZeroReflection.Mediator\ZeroReflection.Mediator.csproj" />
 
-      <!-- Use a normal project reference so the assembly is included at runtime -->
-      <ProjectReference Include="..\ZeroReflection.Mediator\ZeroReflection.Mediator.csproj" />
-  </ItemGroup>
+		<ProjectReference Include="..\ZeroReflection.ApiGenerator\ZeroReflection.ApiGenerator.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
-  </ItemGroup>
+		<!-- Use a normal project reference so the assembly is included at runtime -->
+		<ProjectReference Include="..\ZeroReflection.Api\ZeroReflection.Api.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" />
+		<PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.13.1" />
+		<PackageReference Include="Amazon.Lambda.Core" Version="2.7.1" />
+		<PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
+		<PackageReference Include="Amazon.Lambda.Annotations" Version="1.7.0"/>
+		<PackageReference Include="AWS.Lambda.Powertools.Logging" Version="3.0.2" />
+		<PackageReference Include="AWSSDK.Core" Version="4.0.3.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <TrimmerRootAssembly Include="ZeroReflection.Mapper" />
-        <TrimmerRootAssembly Include="ZeroReflection.Mediator" />
-        <TrimmerRootAssembly Include="Microsoft.Extensions.DependencyInjection" />
-        <TrimmerRootAssembly Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
-    </ItemGroup>
+	<ItemGroup>
+		<TrimmerRootAssembly Include="Amazon.Lambda.APIGatewayEvents"  />
+		<TrimmerRootAssembly Include="Amazon.Lambda.RuntimeSupport"  />
+		<TrimmerRootAssembly Include="Amazon.Lambda.Core"  />
+		<TrimmerRootAssembly Include="Amazon.Lambda.Serialization.SystemTextJson"  />
+		<TrimmerRootAssembly Include="Amazon.Lambda.Annotations"/>
+		<TrimmerRootAssembly Include="AWS.Lambda.Powertools.Logging"  />
+		<TrimmerRootAssembly Include="AWSSDK.Core" />
+		<TrimmerRootAssembly Include="Microsoft.AspNetCore.Http.Abstractions"  />
+		<TrimmerRootAssembly Include="Microsoft.Extensions.DependencyInjection"  />
+		<TrimmerRootAssembly Include="Microsoft.Extensions.Http"  />
+		<TrimmerRootAssembly Include="Microsoft.Extensions.Logging"  />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Models\" />
+	</ItemGroup>
 
 </Project>

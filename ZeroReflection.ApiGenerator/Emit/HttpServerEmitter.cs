@@ -131,6 +131,14 @@ internal static class HttpServerEmitter
         sb.AppendLine("                }");
         sb.AppendLine("            }");
         sb.AppendLine();
+        sb.AppendLine("            // Extract request headers");
+        sb.AppendLine("            var headers = new Dictionary<string, string>();");
+        sb.AppendLine("            foreach (var key in request.Headers.AllKeys)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                if (key != null)");
+        sb.AppendLine("                    headers[key] = request.Headers[key] ?? string.Empty;");
+        sb.AppendLine("            }");
+        sb.AppendLine();
         sb.AppendLine("            // Resolve optional request/response filter");
         sb.AppendLine("            var filter = _serviceProvider.GetService(typeof(ZeroReflection.Api.ApiFilter)) as ZeroReflection.Api.ApiFilter;");
         sb.AppendLine("            var filterContext = new ZeroReflection.Api.ApiFilterContext");
@@ -138,6 +146,7 @@ internal static class HttpServerEmitter
         sb.AppendLine("                Path = path,");
         sb.AppendLine("                Method = method,");
         sb.AppendLine("                QueryValues = queryValues,");
+        sb.AppendLine("                Headers = headers,");
         sb.AppendLine("                Body = body");
         sb.AppendLine("            };");
         sb.AppendLine("            if (filter != null)");
@@ -149,6 +158,7 @@ internal static class HttpServerEmitter
         sb.AppendLine("                method,");
         sb.AppendLine("                new Dictionary<string, string>(),");
         sb.AppendLine("                queryValues,");
+        sb.AppendLine("                headers,");
         sb.AppendLine("                body,");
         sb.AppendLine("                _serviceProvider);");
         sb.AppendLine();

@@ -7,7 +7,7 @@
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-	<VersionPrefix>1.0.4</VersionPrefix>
+	<VersionPrefix>1.0.5</VersionPrefix>
 	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	<PackageId>ZeroReflection.ApiGenerator</PackageId>
 	<Authors>Younes Baghaei Moghaddam</Authors>
@@ -47,6 +47,8 @@
   <ItemGroup>
     <!-- Include the generator DLL in the analyzers path -->
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <!-- Include the .props file so NuGet consumers get CompilerVisibleProperty declarations -->
+    <None Include="ZeroReflection.ApiGenerator.props" Pack="true" PackagePath="build" Visible="false" />
   </ItemGroup>
 
 </Project>

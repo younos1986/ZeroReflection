@@ -61,7 +61,7 @@ public class Mapper(IGeneratedMappingDispatcher dispatcher) : IMapper
                 return singleResult;
         }
 
-        throw new InvalidOperationException($"Cannot map from {sourceType.FullName} to {destType.FullName}.");
+            throw new InvalidOperationException($"Cannot map from {sourceType.FullName} to {destType.FullName}.");
     }
 
     /// <summary>

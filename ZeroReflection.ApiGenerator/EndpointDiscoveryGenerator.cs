@@ -146,6 +146,8 @@ public class EndpointDiscoveryGenerator : IIncrementalGenerator
                 var fromBodyAttr = param.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "FromBodyAttribute");
                 var fromQueryAttr = param.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "FromQueryAttribute");
                 var fromServicesAttr = param.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "FromServicesAttribute");
+                var fromQueryValuesAttr = param.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "FromQueryValuesAttribute");
+                var fromHeadersAttr = param.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "FromHeadersAttribute");
 
                 if (fromRouteAttr != null)
                     paramSource = "route";
@@ -155,6 +157,10 @@ public class EndpointDiscoveryGenerator : IIncrementalGenerator
                     paramSource = "query";
                 else if (fromServicesAttr != null)
                     paramSource = "services";
+                else if (fromQueryValuesAttr != null)
+                    paramSource = "queryValues";
+                else if (fromHeadersAttr != null)
+                    paramSource = "headers";
                 else if (param.Type.Name == "CancellationToken")
                     paramSource = "cancellationToken";
                 else if (endpointRoute != null &&

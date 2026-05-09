@@ -1,0 +1,6 @@
+<Project>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="EnableZeroReflectionApiGeneratedCode" />
+    <CompilerVisibleProperty Include="ZeroReflectionJsonContext" />
+  </ItemGroup>
+</Project>

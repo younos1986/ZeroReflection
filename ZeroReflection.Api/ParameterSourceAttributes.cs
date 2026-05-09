@@ -21,9 +21,15 @@ public class FromQueryAttribute : Attribute
 public class FromHeaderAttribute : Attribute
 {
     public string Name { get; }
-    
+
     public FromHeaderAttribute(string name)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
     }
 }
+
+[AttributeUsage(AttributeTargets.Parameter)]
+public class FromQueryValuesAttribute : Attribute { }
+
+[AttributeUsage(AttributeTargets.Parameter)]
+public class FromHeadersAttribute : Attribute { }

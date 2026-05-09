@@ -8,6 +8,7 @@ public class ApiFilterContext
     public string Path { get; init; } = string.Empty;
     public string Method { get; init; } = string.Empty;
     public Dictionary<string, string> QueryValues { get; init; } = new();
+    public Dictionary<string, string> Headers { get; init; } = new();
     public string? Body { get; init; }
 }
 

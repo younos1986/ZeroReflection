@@ -47,6 +47,7 @@ internal static class RouteDispatcherEmitter
         sb.AppendLine("        string method,");
         sb.AppendLine("        Dictionary<string, string> routeValues,");
         sb.AppendLine("        Dictionary<string, string> queryValues,");
+        sb.AppendLine("        Dictionary<string, string> headers,");
         sb.AppendLine("        string? body,");
         sb.AppendLine("        IServiceProvider serviceProvider,");
         sb.AppendLine("        CancellationToken cancellationToken = default)");
@@ -130,13 +131,21 @@ internal static class RouteDispatcherEmitter
         sb.AppendLine("                try");
         sb.AppendLine("                {");
 
-        // Generate parameter extraction for all body params
+        // Generate parameter extraction for body params
         foreach (var param in endpoint.Parameters)
         {
             if (param.Source == "body")
             {
-                sb.AppendLine($"                    var {param.Name} = System.Text.Json.JsonSerializer.Deserialize(body ?? \"{{}}\", typeof({param.Type}), {jsonContextName}.Default) as {param.Type};");
-                sb.AppendLine($"                    if ({param.Name} == null) return RouteResult.BadRequest(\"Invalid request body\");");
+                var localVar = $"bodyParam_{param.Name}";
+                if (param.Type == "string" || param.Type == "string?")
+                {
+                    sb.AppendLine($"                    var {localVar} = body ?? string.Empty;");
+                }
+                else
+                {
+                    sb.AppendLine($"                    var {localVar} = System.Text.Json.JsonSerializer.Deserialize(body ?? \"{{}}\", typeof({param.Type}), {jsonContextName}.Default) as {param.Type};");
+                    sb.AppendLine($"                    if ({localVar} == null) return RouteResult.BadRequest(\"Invalid request body\");");
+                }
             }
         }
 
@@ -146,7 +155,15 @@ internal static class RouteDispatcherEmitter
         {
             if (param.Source == "body")
             {
-                callParams.Add(param.Name);
+                callParams.Add($"bodyParam_{param.Name}");
+            }
+            else if (param.Source == "queryValues")
+            {
+                callParams.Add("queryValues");
+            }
+            else if (param.Source == "headers")
+            {
+                callParams.Add("headers");
             }
             else if (param.Source == "route")
             {
@@ -182,6 +199,7 @@ internal static class RouteDispatcherEmitter
         var isTask = IsTaskType(rt);
         var isVoidTask = IsVoidTaskType(rt);
         var innerType = isTask && !isVoidTask ? GetTaskInnerType(rt) : rt;
+        var isApiGatewayResponse = innerType.Contains("APIGatewayProxyResponse");
         var isGenericActionResult = innerType.Contains("ActionResult<");
         var isIActionResult = !isGenericActionResult &&
                               (innerType.Contains("IActionResult") ||
@@ -193,6 +211,11 @@ internal static class RouteDispatcherEmitter
             {
                 sb.AppendLine($"                    await {methodCall};");
                 sb.AppendLine("                    return RouteResult.Ok();");
+            }
+            else if (isApiGatewayResponse)
+            {
+                sb.AppendLine($"                    var agr_{endpoint.MethodName} = await {methodCall};");
+                sb.AppendLine($"                    return new ZeroReflection.Api.RouteResult {{ StatusCode = agr_{endpoint.MethodName}.StatusCode, SerializedJson = agr_{endpoint.MethodName}.Body }};");
             }
             else if (isGenericActionResult)
             {
@@ -225,6 +248,11 @@ internal static class RouteDispatcherEmitter
                 sb.AppendLine($"                        return RouteResult.OkJson(System.Text.Json.JsonSerializer.Serialize(result_{endpoint.MethodName}, typeInfo_{endpoint.MethodName}));");
                 sb.AppendLine($"                    return RouteResult.Ok(result_{endpoint.MethodName});");
             }
+        }
+        else if (isApiGatewayResponse)
+        {
+            sb.AppendLine($"                    var agr_{endpoint.MethodName} = {methodCall};");
+            sb.AppendLine($"                    return new ZeroReflection.Api.RouteResult {{ StatusCode = agr_{endpoint.MethodName}.StatusCode, SerializedJson = agr_{endpoint.MethodName}.Body }};");
         }
         else if (isGenericActionResult)
         {

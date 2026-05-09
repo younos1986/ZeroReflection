@@ -28,7 +28,7 @@ public static class LambdaExtensions
     /// <returns>A task representing the Lambda bootstrap</returns>
     public static async Task RunAsLambdaAsync<TJsonContext>(
         this IServiceProvider serviceProvider,
-        Func<string, string, Dictionary<string, string>, Dictionary<string, string>, string?, IServiceProvider, CancellationToken, Task<RouteResult>> routeHandler)
+        Func<string, string, Dictionary<string, string>, Dictionary<string, string>, Dictionary<string, string>, string?, IServiceProvider, CancellationToken, Task<RouteResult>> routeHandler)
         where TJsonContext : JsonSerializerContext, new()
     {
         var jsonContext = (JsonSerializerContext)Activator.CreateInstance(typeof(TJsonContext),
@@ -50,7 +50,7 @@ public static class LambdaExtensions
         APIGatewayProxyRequest apiRequest,
         ILambdaContext context,
         IServiceProvider serviceProvider,
-        Func<string, string, Dictionary<string, string>, Dictionary<string, string>, string?, IServiceProvider, CancellationToken, Task<RouteResult>> routeHandler,
+        Func<string, string, Dictionary<string, string>, Dictionary<string, string>, Dictionary<string, string>, string?, IServiceProvider, CancellationToken, Task<RouteResult>> routeHandler,
         JsonSerializerContext jsonContext)
     {
         try
@@ -70,19 +70,24 @@ public static class LambdaExtensions
 
             var body = apiRequest.Body;
 
+            var headers = apiRequest.Headers != null
+                ? new Dictionary<string, string>(apiRequest.Headers)
+                : new Dictionary<string, string>();
+
             var filter = serviceProvider.GetService(typeof(ApiFilter)) as ApiFilter;
             var filterContext = new ApiFilterContext
             {
                 Path = path,
                 Method = method,
                 QueryValues = queryValues,
+                Headers = headers,
                 Body = body
             };
 
             if (filter != null)
                 await filter.StartRequestAsync(filterContext);
 
-            var result = await routeHandler(path, method, routeValues, queryValues, body, serviceProvider, CancellationToken.None);
+            var result = await routeHandler(path, method, routeValues, queryValues, headers, body, serviceProvider, CancellationToken.None);
 
             if (filter != null)
                 await filter.StartResponseAsync(filterContext, result);
